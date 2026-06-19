@@ -119,9 +119,12 @@ export default function EventExplainer(props) {
 
           <div className="ee-events">
             {events.map(function(ev, i) {
-              var direction = ev.direction || ((ev.return_7d || 0) >= 0 ? 'UP' : 'DOWN');
+              var direction = (ev.direction || '').toUpperCase();
+              if (!direction) direction = ((ev.return_7d || 0) >= 0 ? 'UP' : 'DOWN');
+              var isNeutral = direction === 'NO_SIGNAL' || direction === 'NEUTRAL' || direction === 'FLAT' || direction === 'UNKNOWN';
+              var rowDir = isNeutral ? 'neutral' : direction.toLowerCase();
               return (
-                <div key={i} className={'ee-event-row ee-event-row--' + direction.toLowerCase()}>
+                <div key={i} className={'ee-event-row ee-event-row--' + rowDir}>
                   <div className="ee-event-rank">#{i + 1}</div>
                   <div className="ee-event-body">
                     <div className="ee-event-title">{ev.event_title || ev.title || ev.event_type}</div>
@@ -146,8 +149,8 @@ export default function EventExplainer(props) {
                       <span className="ee-ret-val">{fmtReturn(ev.return_30d)}</span>
                     </div>
                   </div>
-                  <div className={'ee-dir-pill ee-dir-pill--' + direction.toLowerCase()}>
-                    {direction === 'UP' ? '▲' : '▼'} {direction}
+                  <div className={'ee-dir-pill ee-dir-pill--' + rowDir}>
+                    {isNeutral ? '•' : direction === 'UP' ? '▲' : '▼'} {isNeutral ? 'NO SIGNAL' : direction}
                   </div>
                 </div>
               );
