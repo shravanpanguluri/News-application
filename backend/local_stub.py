@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
+import hashlib
 from html import unescape
 import json
 import re
@@ -163,8 +164,9 @@ SECTOR_TICKERS = {
 
 
 def _stable_num(text: str, low: float, high: float) -> float:
-    seed = sum((idx + 1) * ord(ch) for idx, ch in enumerate(text.upper()))
-    ratio = (seed % 1000) / 999.0
+    digest = hashlib.sha256(text.upper().encode("utf-8")).digest()
+    seed = int.from_bytes(digest[:8], "big")
+    ratio = seed / float((1 << 64) - 1)
     return round(low + (high - low) * ratio, 4)
 
 

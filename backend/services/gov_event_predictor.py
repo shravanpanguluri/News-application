@@ -554,12 +554,21 @@ class GovernmentEventPredictor:
 
     # ── Training ──────────────────────────────────────────────────────────────
 
-    def train_model(self, correlation_data: Dict, n_iter: int = 40, cv: int = 4) -> Dict:
+    def train_model(
+        self,
+        correlation_data: Dict,
+        n_iter: int = 40,
+        cv: int = 4,
+        n_jobs: int = 1,
+        max_samples: Optional[int] = None,
+    ) -> Dict:
         """
         Train one XGBoost (or GBM fallback) per horizon via RandomizedSearchCV.
         SMOTE oversampling is applied to balance minority class when n_train < 800.
         n_iter  — random hyperparameter combinations to try (default 40)
         cv      — stratified CV folds inside the search (default 4)
+        n_jobs  — parallel jobs for RandomizedSearchCV (default 1)
+        max_samples — optional stratified cap per horizon for quick refreshes
         """
         model_label = "XGBoost" if _HAS_XGB else "GradientBoosting"
         print(f"  Using model: {model_label}  SMOTE: {'yes' if _HAS_SMOTE else 'no'}")
@@ -576,6 +585,14 @@ class GovernmentEventPredictor:
 
             if ref_df is None:
                 ref_df = df
+
+            if max_samples and len(df) > max_samples:
+                samples = []
+                for _, group in df.groupby("label"):
+                    n_group = max(1, round(max_samples * len(group) / len(df)))
+                    samples.append(group.sample(n=min(len(group), n_group), random_state=42))
+                df = pd.concat(samples, ignore_index=True).sample(frac=1, random_state=42).reset_index(drop=True)
+                print(f"  [{h}] Stratified sample cap applied → {len(df)} samples")
 
             X = df[self.feature_names].fillna(0).values.astype(float)
             y = df["label"].values.astype(int)
@@ -626,7 +643,7 @@ class GovernmentEventPredictor:
                 n_iter=n_iter,
                 cv=cv_strat,
                 scoring="balanced_accuracy",
-                n_jobs=-1,
+                n_jobs=n_jobs,
                 random_state=42,
                 verbose=0,
             )
