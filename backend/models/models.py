@@ -1,10 +1,7 @@
-from datetime import datetime
-
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey, JSON, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from sqlalchemy.types import JSON
-
+from datetime import datetime
 
 Base = declarative_base()
 
@@ -13,21 +10,20 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, nullable=False, index=True)
+    email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
-    tier = Column(String, default="free")
+    tier = Column(String, default="free")  # free, pro, enterprise
     created_at = Column(DateTime, default=datetime.utcnow)
     api_key = Column(String, unique=True, index=True)
-    daily_limit = Column(Integer, default=50)
+
+    # Tier limits
+    daily_limit = Column(Integer, default=50)  # 50 for free, 5000 for pro, unlimited for enterprise
     requests_today = Column(Integer, default=0)
     last_reset = Column(DateTime, default=datetime.utcnow)
-    watchlist_keywords = Column(JSON, default=list)
+    watchlist_keywords = Column(JSON, default=list)  # ["H1B", "GST", "Bitcoin"]
 
     articles = relationship("Article", back_populates="user")
     alerts = relationship("Alert", back_populates="user")
-    subscriptions = relationship("Subscription", back_populates="user")
-    api_usage = relationship("APIUsage", back_populates="user")
-    reading_history = relationship("ReadingHistory", back_populates="user")
 
 
 class Article(Base):
@@ -37,25 +33,20 @@ class Article(Base):
     title = Column(String, nullable=False)
     description = Column(Text)
     content = Column(Text)
-    source = Column(String)
-    country = Column(String)
-    category = Column(String)
-    url = Column(String, nullable=False, unique=True)
+    source = Column(String)  # pib, federal_register, govinfo, data_gov_in
+    country = Column(String)  # in, us
+    category = Column(String)  # economy, health, education, regulation, etc.
+    url = Column(String, unique=True, nullable=False)
     published_at = Column(DateTime)
     fetched_at = Column(DateTime, default=datetime.utcnow)
-    impact_score = Column(Integer, default=0)
-    impact_level = Column(String, default="Low")
-    sentiment = Column(String, default="Neutral")
+    impact_score = Column(Integer, default=0)  # 0-10
+    impact_level = Column(String, default="Low")  # Low, Medium, High
+    sentiment = Column(String, default="Neutral")  # Positive, Negative, Neutral
     tags = Column(JSON, default=list)
     article_metadata = Column(JSON, default=dict)
+
     user_id = Column(Integer, ForeignKey("users.id"))
-
     user = relationship("User", back_populates="articles")
-
-    @property
-    def ai_summary(self):
-        metadata = self.article_metadata or {}
-        return metadata.get("ai_summary")
 
 
 class Alert(Base):
@@ -63,15 +54,15 @@ class Alert(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
+    user = relationship("User", back_populates="alerts")
+
     keyword = Column(String)
     category = Column(String)
     country = Column(String)
-    alert_type = Column(String)
-    webhook_url = Column(String)
+    alert_type = Column(String)  # email, push, webhook
+    webhook_url = Column(String)  # for enterprise tier
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
-
-    user = relationship("User", back_populates="alerts")
 
 
 class Subscription(Base):
@@ -79,13 +70,11 @@ class Subscription(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    plan = Column(String)
+    plan = Column(String)  # free, pro, enterprise
     start_date = Column(DateTime, default=datetime.utcnow)
     end_date = Column(DateTime)
     is_active = Column(Boolean, default=True)
-    amount = Column(Integer)
-
-    user = relationship("User", back_populates="subscriptions")
+    amount = Column(Integer)  # in INR
 
 
 class APIUsage(Base):
@@ -95,9 +84,7 @@ class APIUsage(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     endpoint = Column(String)
     timestamp = Column(DateTime, default=datetime.utcnow)
-    response_time_ms = Column(Integer)
-
-    user = relationship("User", back_populates="api_usage")
+    response_time = Column(Float)  # in milliseconds
 
 
 class ReadingHistory(Base):
@@ -105,10 +92,10 @@ class ReadingHistory(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    article_id = Column(String)
+    article_id = Column(String)  # Store article URL or ID
     category = Column(String)
-    topics = Column(JSON, default=list)
+    topics = Column(JSON, default=list)  # Extracted topics/keywords
     read_at = Column(DateTime, default=datetime.utcnow, index=True)
-    read_duration = Column(Integer)
-
-    user = relationship("User", back_populates="reading_history")
+    read_duration = Column(Integer, default=0)  # seconds spent reading
+    
+    user = relationship("User", backref="reading_history")

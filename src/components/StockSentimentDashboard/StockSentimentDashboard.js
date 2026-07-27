@@ -21,6 +21,8 @@ import './StockSentimentDashboard.css';
 
 // Default watchlist if market data not available
 const DEFAULT_WATCHLIST = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META', 'JPM', 'JNJ', 'XOM', 'BA', 'GS', 'PFE', 'KO', 'PG'];
+const INDEX_TICKERS = ['DJIA', 'VIX', 'SPX', 'NDX', 'RUT', 'MID', 'DAX', 'FTSE', 'NIFTY', 'SENSEX'];
+const MAX_WATCHLIST_STOCKS = 1200;
 
 const SECTORS = [
     { key: 'technology', name: 'Technology', icon: 'computer' },
@@ -66,11 +68,13 @@ const StockSentimentDashboard = ({ marketPrices }) => {
         if (marketPrices && marketPrices[activeAssetClass]) {
             const symbols = marketPrices[activeAssetClass]
                 .map(item => item.symbol || item.ticker || '')
-                .filter(s => s && s.length > 0);
+                .filter(s => /^[A-Z]{1,5}$/.test(s) && !INDEX_TICKERS.includes(s));
 
             if (symbols.length > 0) {
                 console.log(`📊 Asset Class Switch: ${activeAssetClass}`, symbols);
-                setWatchlistStocks(symbols);
+                setWatchlistStocks(symbols.slice(0, MAX_WATCHLIST_STOCKS));
+            } else if (activeAssetClass === 'stocks') {
+                setWatchlistStocks(DEFAULT_WATCHLIST);
             }
         }
     }, [marketPrices, activeAssetClass]);
@@ -86,7 +90,11 @@ const StockSentimentDashboard = ({ marketPrices }) => {
             .then(function(data) {
                 var allTickers = (data && data.tickers) ? data.tickers : [];
                 if (allTickers.length > 0) {
-                    fetchGovernmentPredictions(allTickers);
+                    var stockTickers = allTickers
+                        .filter(function(ticker) { return /^[A-Z]{1,5}$/.test(ticker) && !INDEX_TICKERS.includes(ticker); })
+                        .slice(0, MAX_WATCHLIST_STOCKS);
+                    setWatchlistStocks(stockTickers);
+                    fetchGovernmentPredictions(stockTickers);
                 }
             })
             .catch(function(e) { console.error('Failed to load known tickers:', e); });
@@ -236,12 +244,8 @@ const StockSentimentDashboard = ({ marketPrices }) => {
             
             if (sectorPredictions.length > 0) {
                 const avgProb = sectorPredictions.reduce((sum, p) => sum + p.probability, 0) / sectorPredictions.length;
-                const bullishCount = sectorPredictions.filter(p => (p.prediction || '').toUpperCase() === 'UP').length;
-                const bearishCount = sectorPredictions.filter(p => (p.prediction || '').toUpperCase() === 'DOWN').length;
-                const neutralCount = sectorPredictions.filter(p => {
-                    const pred = (p.prediction || '').toUpperCase();
-                    return pred !== 'UP' && pred !== 'DOWN';
-                }).length;
+                const bullishCount = sectorPredictions.filter(p => p.prediction === 'Up').length;
+                const bearishCount = sectorPredictions.length - bullishCount;
                 
                 sectors[sectorName] = {
                     sentiment: avgProb > 0.55 ? 'Bullish' : avgProb < 0.45 ? 'Bearish' : 'Neutral',
@@ -249,7 +253,6 @@ const StockSentimentDashboard = ({ marketPrices }) => {
                     stocks_analyzed: sectorPredictions.length,
                     bullish_stocks: bullishCount,
                     bearish_stocks: bearishCount,
-                    neutral_stocks: neutralCount,
                     top_picks: sectorPredictions.slice(0, 3)
                 };
             } else {
@@ -260,7 +263,6 @@ const StockSentimentDashboard = ({ marketPrices }) => {
                     stocks_analyzed: 0,
                     bullish_stocks: 0,
                     bearish_stocks: 0,
-                    neutral_stocks: 0,
                     top_picks: []
                 };
             }
@@ -708,13 +710,11 @@ const StockWatchlistTab = ({
     tickerSearch,
     setTickerSearch
 }) => {
-    var PAGE_SIZE = 25;
     var [sortCol, setSortCol] = useState('7d');
     var [sortDir, setSortDir] = useState('desc');
     var [expandedRow, setExpandedRow] = useState(null);
     var [sparklines, setSparklines] = useState({});
     var [sparkQueued, setSparkQueued] = useState(false);
-    var [page, setPage] = useState(1);
 
     // Fetch sparklines for visible tickers after predictions load
     useEffect(function() {
@@ -751,7 +751,6 @@ const StockWatchlistTab = ({
             setSortCol(col);
             setSortDir('desc');
         }
-        setPage(1);
     };
 
     var sortIcon = function(col) {
@@ -759,27 +758,19 @@ const StockWatchlistTab = ({
         return <Icon name={sortDir === 'desc' ? 'sort down' : 'sort up'} style={{ marginLeft: 4, color: '#003591' }} />;
     };
 
-    var renderHorizon = function(horizon, scaleFactor) {
+    var renderHorizon = function(horizon) {
         if (!horizon) return <div>—</div>;
         var conf = typeof horizon.confidence === 'number' ? horizon.confidence : 0;
         var displayConf = Math.round(conf * 100);
         var dir = (horizon.direction || '').toUpperCase();
-        var isNeutral = dir === 'NO_SIGNAL' || dir === 'NEUTRAL' || dir === 'FLAT' || dir === 'UNKNOWN';
         var color = dir === 'UP' ? 'green' : dir === 'DOWN' ? 'red' : 'grey';
-        var icon = dir === 'UP' ? 'arrow up' : dir === 'DOWN' ? 'arrow down' : 'minus';
-        var scale = scaleFactor || 10;
-        var predPct = dir === 'UP' ? +((conf - 0.5) * scale).toFixed(1)
-                    : dir === 'DOWN' ? -((conf - 0.5) * scale).toFixed(1)
-                    : 0;
+        var icon = dir === 'UP' ? 'arrow up' : 'arrow down';
         return (
             <div className="horizon-container">
                 <Label color={color} className="horizon-badge">
                     <Icon name={icon} size="tiny" /> {horizon.direction || 'N/A'}
                 </Label>
                 <div className="horizon-conf">{displayConf}% <span style={{fontSize: '0.7em', fontWeight: 500}}>CONF</span></div>
-                <div style={{fontSize: '0.72em', fontWeight: 600, color: dir === 'UP' ? '#2d7a4f' : dir === 'DOWN' ? '#b84030' : '#888', marginTop: 2}}>
-                    {!isNeutral && dir !== '' ? (predPct >= 0 ? '+' : '') + predPct + '% pred' : 'NO SIGNAL'}
-                </div>
             </div>
         );
     };
@@ -788,8 +779,33 @@ const StockWatchlistTab = ({
         return ((pred.horizons && pred.horizons[h]) ? pred.horizons[h].confidence : 0) || 0;
     };
 
-    var allRows = Object.values(govPredictions)
+    // Government predictions are optional. The sentiment batch is the fast,
+    // reliable source for the visible stock table and should render immediately.
+    var fallbackRows = (predictions || []).map(function(pred) {
+        var rawDirection = String(pred.prediction || '').toUpperCase();
+        var normalizedDirection = rawDirection === 'UP' || rawDirection === 'DOWN'
+            ? (rawDirection === 'UP' ? 'Up' : 'Down')
+            : (Number(pred.probability || 0.5) >= 0.5 ? 'Up' : 'Down');
+        var horizon = {
+            direction: normalizedDirection,
+            confidence: pred.probability || 0.5
+        };
+        return Object.assign({}, pred, {
+            horizons: { '1d': horizon, '3d': horizon, '7d': horizon, '30d': horizon },
+            gov_events: pred.gov_events || 0,
+            total_contracts: pred.total_contracts || 0
+        });
+    });
+    var validGovRows = Object.values(govPredictions).filter(function(pred) {
+        return pred && pred.ticker && !INDEX_TICKERS.includes(pred.ticker) &&
+            pred.horizons && ['1d', '3d', '7d', '30d'].every(function(h) {
+                var horizon = pred.horizons[h];
+                return horizon && (horizon.direction === 'Up' || horizon.direction === 'Down' || horizon.direction === 'UP' || horizon.direction === 'DOWN') && Number(horizon.confidence) > 0;
+            });
+    });
+    var allRows = (validGovRows.length > 0 ? validGovRows : fallbackRows)
         .filter(function(pred) {
+            if (pred.ticker && INDEX_TICKERS.includes(pred.ticker)) return false;
             if (!tickerSearch) return true;
             return pred.ticker && pred.ticker.indexOf(tickerSearch) !== -1;
         })
@@ -809,8 +825,6 @@ const StockWatchlistTab = ({
             return sortDir === 'desc' ? vb - va : va - vb;
         });
 
-    var totalPages = Math.ceil(allRows.length / PAGE_SIZE);
-    var pagedRows  = allRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
     var hdrStyle = { cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' };
 
     return (
@@ -850,7 +864,7 @@ const StockWatchlistTab = ({
                             type="text"
                             placeholder="Search ticker…"
                             value={tickerSearch}
-                            onChange={function(e) { setTickerSearch(e.target.value.toUpperCase()); setPage(1); }}
+                            onChange={function(e) { setTickerSearch(e.target.value.toUpperCase()); }}
                             className="worthy-search-input"
                         />
                         <Icon name="search" style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', fontSize: '12px' }} />
@@ -861,15 +875,15 @@ const StockWatchlistTab = ({
 
             <Message info size="tiny" style={{ marginBottom: '15px' }}>
                 <Icon name="info circle" />
-                <strong>Multi-Horizon Predictions:</strong> XGBoost model trained on 5,058 government events across 110 companies.
-                Accuracy: <strong>69.9% (1d) · 62.8% (3d) · 63.5% (7d) · 66.8% (30d)</strong>. Click any column header to sort. Click a row to see what drove the prediction.
+                <strong>Multi-Horizon Predictions:</strong> XGBoost model trained on 3,149 government events across 97 companies.
+                Accuracy: <strong>65.9% (1d) · 61.6% (3d) · 66.4% (7d) · 59.9% (30d)</strong>. Click any column header to sort. Click a row to see what drove the prediction.
             </Message>
 
-            {govLoading && Object.keys(govPredictions).length === 0 ? (
+            {govLoading && Object.keys(govPredictions).length === 0 && allRows.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '30px' }}>
                     <Loader active inline /> <span style={{ marginLeft: '10px', color: '#64748b' }}>Loading predictions for all stocks…</span>
                 </div>
-            ) : Object.keys(govPredictions).length === 0 ? (
+            ) : allRows.length === 0 ? (
                 <Message info icon="info circle" header="No Predictions" content="Click Refresh to load stock predictions" />
             ) : (
                 <div className="worthy-table-wrap" style={{ maxHeight: '560px', overflowY: 'auto' }}>
@@ -891,9 +905,6 @@ const StockWatchlistTab = ({
                                 <Table.HeaderCell style={hdrStyle} onClick={function() { handleSort('30d'); }}>
                                     30d {sortIcon('30d')}
                                 </Table.HeaderCell>
-                                <Table.HeaderCell style={hdrStyle}>
-                                    Actual
-                                </Table.HeaderCell>
                                 <Table.HeaderCell style={hdrStyle} onClick={function() { handleSort('gov_events'); }}>
                                     Events {sortIcon('gov_events')}
                                 </Table.HeaderCell>
@@ -904,7 +915,7 @@ const StockWatchlistTab = ({
                             </Table.Row>
                         </Table.Header>
                         <Table.Body>
-                            {pagedRows.map(function(pred, idx) {
+                            {allRows.map(function(pred, idx) {
                                 var horizons = pred.horizons || {};
                                 var anchor = pred.anchor_event || null;
                                 var spark = sparklines[pred.ticker] || null;
@@ -942,25 +953,10 @@ const StockWatchlistTab = ({
                                                 </div>
                                             </div>
                                         </Table.Cell>
-                                        <Table.Cell>{renderHorizon(horizons['1d'], 4)}</Table.Cell>
-                                        <Table.Cell>{renderHorizon(horizons['3d'], 8)}</Table.Cell>
-                                        <Table.Cell className="sweet-spot-col">{renderHorizon(horizons['7d'], 14)}</Table.Cell>
-                                        <Table.Cell>{renderHorizon(horizons['30d'], 30)}</Table.Cell>
-                                        <Table.Cell>
-                                            {spark && spark.prices && spark.prices.length > 1 ? (function() {
-                                                var p = spark.prices;
-                                                var act1d = p.length >= 2  ? ((p[p.length-1]-p[p.length-2])/p[p.length-2]*100).toFixed(1) : null;
-                                                var act7d = p.length >= 8  ? ((p[p.length-1]-p[p.length-8])/p[p.length-8]*100).toFixed(1) : null;
-                                                var act30d = spark.change_pct != null ? parseFloat(spark.change_pct).toFixed(1) : null;
-                                                return (
-                                                    <div style={{fontSize:'0.75em', lineHeight:1.6, textAlign:'left'}}>
-                                                        {act1d  != null && <div style={{color: parseFloat(act1d)  >= 0 ? '#2d7a4f':'#b84030', fontWeight:600}}>1d: {act1d  >= 0 ? '+':''}{act1d}%</div>}
-                                                        {act7d  != null && <div style={{color: parseFloat(act7d)  >= 0 ? '#2d7a4f':'#b84030', fontWeight:600}}>7d: {act7d  >= 0 ? '+':''}{act7d}%</div>}
-                                                        {act30d != null && <div style={{color: parseFloat(act30d) >= 0 ? '#2d7a4f':'#b84030', fontWeight:600}}>30d: {act30d >= 0 ? '+':''}{act30d}%</div>}
-                                                    </div>
-                                                );
-                                            })() : <span style={{color:'#aaa', fontSize:'0.75em'}}>loading…</span>}
-                                        </Table.Cell>
+                                        <Table.Cell>{renderHorizon(horizons['1d'])}</Table.Cell>
+                                        <Table.Cell>{renderHorizon(horizons['3d'])}</Table.Cell>
+                                        <Table.Cell className="sweet-spot-col">{renderHorizon(horizons['7d'])}</Table.Cell>
+                                        <Table.Cell>{renderHorizon(horizons['30d'])}</Table.Cell>
                                         <Table.Cell>
                                             <Label circular className="gov-count-badge">{pred.gov_events || 0}</Label>
                                         </Table.Cell>
@@ -1012,37 +1008,6 @@ const StockWatchlistTab = ({
                             })}
                         </Table.Body>
                     </Table>
-                </div>
-            )}
-
-            {totalPages > 1 && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '12px' }}>
-                    <Button
-                        icon="angle double left" size="mini"
-                        disabled={page === 1}
-                        onClick={function() { setPage(1); }}
-                    />
-                    <Button
-                        icon="angle left" size="mini"
-                        disabled={page === 1}
-                        onClick={function() { setPage(function(p) { return Math.max(1, p - 1); }); }}
-                    />
-                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', minWidth: '90px', textAlign: 'center' }}>
-                        Page {page} / {totalPages}
-                    </span>
-                    <Button
-                        icon="angle right" size="mini"
-                        disabled={page === totalPages}
-                        onClick={function() { setPage(function(p) { return Math.min(totalPages, p + 1); }); }}
-                    />
-                    <Button
-                        icon="angle double right" size="mini"
-                        disabled={page === totalPages}
-                        onClick={function() { setPage(totalPages); }}
-                    />
-                    <span style={{ fontSize: '11px', color: '#94a3b8', marginLeft: '6px' }}>
-                        {allRows.length} stocks total
-                    </span>
                 </div>
             )}
 

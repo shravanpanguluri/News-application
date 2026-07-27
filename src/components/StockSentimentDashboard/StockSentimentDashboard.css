@@ -1,0 +1,486 @@
+/* =============================================
+   STOCK SENTIMENT DASHBOARD — Schwab style
+   ============================================= */
+
+.sentiment-dashboard {
+    border-radius: 8px !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07) !important;
+    background: var(--segment-bg) !important;
+    border-top: 3px solid var(--accent) !important;
+}
+
+.dark-mode .sentiment-dashboard {
+    background: var(--segment-bg) !important;
+    border-color: var(--border-color) !important;
+    border-top-color: var(--accent) !important;
+    box-shadow: 0 8px 36px rgba(0,0,0,0.4) !important;
+}
+
+/* Dashboard header */
+.sentiment-dashboard > .ui.header {
+    padding: 20px 20px 0 !important;
+}
+
+/* =============================================
+   TAB MENU — scrollable on all screen sizes
+   ============================================= */
+.sentiment-dashboard .ui.secondary.pointing.menu {
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border-color) !important;
+    margin: 12px 0 0 !important;
+    gap: 2px;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: nowrap !important;
+}
+.sentiment-dashboard .ui.secondary.pointing.menu::-webkit-scrollbar { display: none; }
+.sentiment-dashboard .ui.secondary.pointing.menu .item {
+    flex-shrink: 0 !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    padding: 10px 14px !important;
+    color: var(--text-secondary) !important;
+    border-radius: 4px 4px 0 0 !important;
+    transition: all 0.15s ease !important;
+    border-bottom: 2px solid transparent !important;
+    margin-bottom: -1px !important;
+    white-space: nowrap !important;
+}
+.sentiment-dashboard .ui.secondary.pointing.menu .item:hover {
+    color: #003591 !important;
+    background: rgba(0,53,145,0.05) !important;
+}
+.sentiment-dashboard .ui.secondary.pointing.menu .active.item {
+    color: #003591 !important;
+    border-bottom: 2px solid #003591 !important;
+    background: transparent !important;
+}
+.dark-mode .sentiment-dashboard .ui.secondary.pointing.menu {
+    border-bottom-color: rgba(255,255,255,0.08) !important;
+}
+.dark-mode .sentiment-dashboard .ui.secondary.pointing.menu .item {
+    color: #5a7a8f !important;
+}
+.dark-mode .sentiment-dashboard .ui.secondary.pointing.menu .active.item {
+    color: #00a3e0 !important;
+    border-bottom-color: #00a3e0 !important;
+}
+
+/* Tab pane */
+.sentiment-dashboard .ui.tab.segment {
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 20px !important;
+    background: transparent !important;
+}
+.dark-mode .sentiment-dashboard .ui.tab.segment {
+    background: transparent !important;
+}
+
+/* =============================================
+   WORTHY TABLE — multi-horizon predictions
+   ============================================= */
+
+.worthy-table-wrap {
+    position: relative;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0,89,179,0.3) transparent;
+}
+.worthy-table-wrap::-webkit-scrollbar       { height: 4px; }
+.worthy-table-wrap::-webkit-scrollbar-track { background: transparent; }
+.worthy-table-wrap::-webkit-scrollbar-thumb { background: rgba(0,89,179,0.35); border-radius: 2px; }
+
+.worthy-table {
+    border-radius: 6px !important;
+    overflow: hidden !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: var(--segment-bg) !important;
+    min-width: 740px;
+}
+
+/* Header */
+.worthy-table thead th {
+    background: var(--bg-secondary) !important;
+    color: var(--text-secondary) !important;
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.8px !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+    padding: 11px 14px !important;
+    border-bottom: 2px solid var(--border-color) !important;
+}
+
+/* Rows */
+.worthy-table tbody tr {
+    transition: background 0.12s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0,53,145,0.08);
+}
+.worthy-table tbody tr:hover {
+    background: var(--bg-secondary) !important;
+}
+.worthy-table tbody td {
+    padding: 10px 14px !important;
+    border-top: 1px solid var(--border-color) !important;
+    vertical-align: middle !important;
+    color: var(--text-color) !important;
+}
+
+/* Sweet spot column — Schwab sky-blue tint */
+.sweet-spot-col {
+    background: rgba(0,53,145,0.04) !important;
+    border-left: 1px solid rgba(0,53,145,0.1) !important;
+    border-right: 1px solid rgba(0,53,145,0.1) !important;
+}
+.dark-mode .sweet-spot-col {
+    background: rgba(0,163,224,0.07) !important;
+    border-left-color: rgba(0,163,224,0.15) !important;
+    border-right-color: rgba(0,163,224,0.15) !important;
+}
+
+/* =============================================
+   TICKER CELL
+   ============================================= */
+.ticker-cell {
+    font-size: 1rem !important;
+    font-weight: 800 !important;
+    color: var(--text-color) !important;
+    letter-spacing: -0.01em !important;
+}
+
+.anchor-event-label {
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: #7a93aa;
+    margin-top: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 130px;
+    letter-spacing: 0.1px;
+}
+.dark-mode .anchor-event-label { color: #3d6070; }
+
+/* =============================================
+   HORIZON BADGES — Schwab signal colors
+   ============================================= */
+.horizon-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 72px;
+}
+
+.horizon-badge {
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    padding: 4px 10px !important;
+    border-radius: 3px !important;
+    letter-spacing: 0.2px !important;
+    border: none !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15) !important;
+}
+
+/* UP badge — Schwab green */
+.ui.label.green.horizon-badge {
+    background: #007f3b !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(0,127,59,0.3) !important;
+}
+/* DOWN badge — Schwab red */
+.ui.label.red.horizon-badge {
+    background: #c8102e !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(200,16,46,0.3) !important;
+}
+
+.horizon-conf {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+}
+
+/* =============================================
+   BADGES — gov count & contracts
+   ============================================= */
+.gov-count-badge {
+    background: #003591 !important;
+    color: white !important;
+    border-radius: 4px !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    min-width: 28px !important;
+    box-shadow: 0 2px 6px rgba(0,53,145,0.3) !important;
+}
+
+.contract-badge {
+    background: #0059b3 !important;
+    color: white !important;
+    border-radius: 4px !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    min-width: 28px !important;
+    box-shadow: 0 2px 6px rgba(0,89,179,0.25) !important;
+}
+
+/* =============================================
+   INFO MESSAGE STRIP
+   ============================================= */
+.sentiment-dashboard .ui.info.message {
+    border-radius: 4px !important;
+    border: 1px solid rgba(0,53,145,0.2) !important;
+    background: rgba(0,53,145,0.04) !important;
+    color: #003591 !important;
+    box-shadow: none !important;
+}
+.dark-mode .sentiment-dashboard .ui.info.message {
+    background: rgba(0,163,224,0.07) !important;
+    border-color: rgba(0,163,224,0.2) !important;
+    color: #00a3e0 !important;
+}
+
+/* =============================================
+   SECTOR CARDS
+   ============================================= */
+.sector-card {
+    border-radius: 6px !important;
+    border: 1px solid #c8d4df !important;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05) !important;
+    transition: all 0.2s ease !important;
+    overflow: hidden !important;
+}
+.sector-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(0,53,145,0.1) !important;
+}
+.sector-card.sector-bullish { border-top: 3px solid #007f3b !important; }
+.sector-card.sector-bearish { border-top: 3px solid #c8102e !important; }
+.sector-card.sector-neutral { border-top: 3px solid #003591 !important; }
+
+.dark-mode .sector-card {
+    background: #0f2744 !important;
+    border-color: rgba(255,255,255,0.08) !important;
+}
+
+/* =============================================
+   WORTHY TABLE CONTROLS
+   ============================================= */
+.worthy-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.worthy-controls-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.worthy-search-input {
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    padding: 6px 10px 6px 30px !important;
+    font-size: 12px !important;
+    width: 130px !important;
+    outline: none !important;
+    background: transparent !important;
+    color: inherit !important;
+}
+
+/* =============================================
+   EXPANDED DRIVER ROW
+   ============================================= */
+.worthy-driver-row {
+    background: var(--bg-secondary) !important;
+}
+
+.worthy-driver-row > td {
+    padding: 12px 16px !important;
+}
+
+.worthy-driver-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent-mid);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.driver-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.driver-label {
+    width: 130px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    text-align: right;
+}
+
+.driver-bar-wrap {
+    flex: 1;
+    background: var(--bg-color);
+    border-radius: 3px;
+    height: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.driver-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+}
+
+.driver-pct {
+    width: 40px;
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.driver-val {
+    width: 55px;
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-align: right;
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+
+/* =============================================
+   MOBILE (≤ 480px)
+   ============================================= */
+@media (max-width: 480px) {
+    .sentiment-dashboard .ui.tab.segment { padding: 8px !important; }
+
+    /* Tab menu compact */
+    .sentiment-dashboard .ui.secondary.pointing.menu {
+        padding: 0 8px !important;
+        gap: 0 !important;
+    }
+    .sentiment-dashboard .ui.secondary.pointing.menu .item {
+        font-size: 0.72rem !important;
+        padding: 8px 9px !important;
+    }
+
+    /* Controls header — stack vertically */
+    .worthy-controls        { flex-direction: column; align-items: flex-start; }
+    .worthy-controls-right  { width: 100%; justify-content: flex-end; }
+    .worthy-search-input    { width: 110px !important; }
+
+    /* All 8 columns kept — table scrolls horizontally.
+       Make every cell as compact as possible to minimise scroll distance. */
+    .worthy-table           { min-width: 580px !important; }
+
+    /* Hide sparkline (decorative, not data) — saves ~86px in Symbol col */
+    .ticker-spark           { display: none !important; }
+
+    .worthy-table thead tr th   { font-size: 0.58rem !important; padding: 7px 6px !important; }
+    .worthy-table tbody tr td   { padding: 7px 6px !important; }
+
+    .horizon-container  { min-width: 46px; gap: 2px; }
+    .horizon-badge      { font-size: 0.58rem !important; padding: 2px 5px !important; }
+    .horizon-conf       { font-size: 0.58rem; }
+
+    .ticker-cell        { font-size: 0.8rem !important; }
+    .anchor-event-label { font-size: 0.56rem; max-width: 72px; }
+
+    .gov-count-badge,
+    .contract-badge     { font-size: 0.6rem !important; min-width: 22px !important; }
+
+    /* Scroll hint — fade on the right edge so user knows to swipe */
+    .worthy-table-wrap  { position: relative; }
+    .worthy-table-wrap::after {
+        content: '';
+        position: absolute;
+        top: 0; right: 0; bottom: 0;
+        width: 28px;
+        background: linear-gradient(to left, var(--segment-bg), transparent);
+        pointer-events: none;
+        border-radius: 0 6px 6px 0;
+    }
+
+    /* Info message: compact, 2 lines max */
+    .sentiment-dashboard .ui.info.message {
+        font-size: 10.5px !important;
+        padding: 7px 10px !important;
+        line-height: 1.45 !important;
+    }
+
+    /* Expanded driver row */
+    .driver-label               { width: 80px; font-size: 10px; }
+    .driver-pct                 { width: 28px; font-size: 9px; }
+    .driver-val                 { display: none; }
+    .worthy-driver-row > td     { padding: 10px !important; }
+}
+
+/* =============================================
+   TABLET (481px – 1024px)
+   ============================================= */
+@media (min-width: 481px) and (max-width: 1024px) {
+    .sentiment-dashboard .ui.tab.segment { padding: 14px !important; }
+
+    /* All 8 columns kept — table scrolls if needed */
+    .worthy-table { min-width: 680px !important; }
+
+    /* Hide sparkline on tablet too (saves space, not data) */
+    .ticker-spark { display: none !important; }
+
+    .worthy-table thead tr th { font-size: 0.64rem !important; padding: 9px 9px !important; }
+    .worthy-table tbody tr td { padding: 9px 9px !important; }
+    .horizon-badge            { font-size: 0.64rem !important; }
+    .horizon-container        { min-width: 60px; }
+
+    /* Scroll hint on tablet too */
+    .worthy-table-wrap::after {
+        content: '';
+        position: absolute;
+        top: 0; right: 0; bottom: 0;
+        width: 20px;
+        background: linear-gradient(to left, var(--segment-bg), transparent);
+        pointer-events: none;
+        border-radius: 0 6px 6px 0;
+    }
+
+    /* Driver row tablet */
+    .driver-label { width: 100px; font-size: 10px; }
+    .driver-val   { display: none; }
+}
+
+/* =============================================
+   PROJECTOR (≥ 1441px)
+   ============================================= */
+@media (min-width: 1441px) {
+    .worthy-table thead th { font-size: 0.76rem !important; padding: 14px 18px !important; }
+    .worthy-table tbody td { padding: 14px 18px !important; }
+    .ticker-cell           { font-size: 1.1rem !important; }
+    .horizon-badge         { font-size: 0.76rem !important; padding: 5px 14px !important; }
+    .horizon-conf          { font-size: 0.76rem; }
+    .anchor-event-label    { font-size: 0.7rem; max-width: 160px; }
+    .gov-count-badge,
+    .contract-badge        { font-size: 0.76rem !important; }
+}

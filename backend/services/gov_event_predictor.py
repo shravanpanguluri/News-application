@@ -18,10 +18,8 @@ from typing import Dict, List, Optional
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.metrics import accuracy_score, balanced_accuracy_score, f1_score, log_loss
 from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold, train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.utils.class_weight import compute_sample_weight
 
 try:
     from xgboost import XGBClassifier
@@ -59,26 +57,6 @@ FEATURE_COLS = [
     "pe_ratio",           # trailing 12-month P/E at event date (0 if unavailable)
     "revenue_growth_yoy", # YoY quarterly revenue growth % (0 if unavailable)
     "earnings_surprise",  # most recent earnings surprise % before event (0 if unavailable)
-    # 3d-targeted features (v4)
-    "event_cluster_3d",      # events in prior 3 days — burst activity signal
-    "momentum_agreement",    # 1 if stock & market momentum agree in direction
-    "signal_vix_interaction", # signal_score * vix_level / 100 — high-signal in fear market
-    "avg_return_5d",         # mean of last 5 event returns — recent momentum context
-    # 3d-targeted features (v5) — dedicated 3d autocorrelation and regime signals
-    "return_3d_lag1",        # previous event's 3d return for ticker — direct autocorrelation
-    "vol_ratio_3d",          # 3d volatility / 30d volatility — short-term regime shift
-    "contract_bullish_ix",   # event_type_contract × (market_momentum_3d > 0) — event×trend
-    "momentum_strength",     # |stock_momentum_3d| — magnitude independent of direction
-    "days_to_week_end",      # days until Friday — captures end-of-week reversion patterns
-    # New v6: event family + source quality
-    "event_type_insider",
-    "event_type_earnings",
-    "event_type_macro",
-    "event_type_geopolitical",
-    "event_type_legal",
-    "event_type_policy",
-    "event_type_enforcement",
-    "source_credibility",
 ]
 
 # XGBoost search space
@@ -115,102 +93,7 @@ _STAT_FEATURES = [
     "stock_volatility_30d", "vix_level",
     "events_last_7d", "consecutive_positive_returns",
     "pe_ratio", "revenue_growth_yoy", "earnings_surprise",
-    "event_cluster_3d", "momentum_agreement", "signal_vix_interaction", "avg_return_5d",
-    "return_3d_lag1", "vol_ratio_3d", "contract_bullish_ix", "momentum_strength", "days_to_week_end",
-    "source_credibility",
 ]
-
-NO_SIGNAL_LABEL = 1
-DOWN_LABEL = 0
-UP_LABEL = 2
-
-HORIZON_LABEL_THRESHOLDS = {
-    "1d": 0.45,
-    "3d": 0.75,
-    "7d": 1.10,
-    "30d": 1.75,
-}
-
-SOURCE_CREDIBILITY = {
-    "usaspending": 0.98,
-    "federal register": 0.96,
-    "sec": 0.96,
-    "fda": 0.95,
-    "treasury": 0.95,
-    "white house": 0.94,
-    "doj": 0.94,
-    "congress": 0.92,
-    "nasa": 0.92,
-    "news": 0.78,
-    "gdelt": 0.72,
-    "rss": 0.74,
-}
-
-
-def _normalize_event_type(event_type: str, title: str = "", source: str = "") -> str:
-    raw = " ".join([str(event_type or ""), str(title or ""), str(source or "")]).lower()
-    if any(k in raw for k in ["insider", "form 4", "beneficial owner", "director trading"]):
-        return "insider"
-    if any(k in raw for k in ["earnings", "quarterly results", "revenue", "eps", "guidance"]):
-        return "earnings"
-    if any(k in raw for k in ["inflation", "cpi", "ppi", "gdp", "fed", "fomc", "rates", "macro"]):
-        return "macro"
-    if any(k in raw for k in ["geopolitical", "war", "sanction", "conflict", "military", "defense"]):
-        return "geopolitical"
-    if any(k in raw for k in ["legal", "lawsuit", "settlement", "court", "antitrust"]):
-        return "legal"
-    if any(k in raw for k in ["policy", "regulatory", "rule", "regulation", "federal register"]):
-        return "policy"
-    if any(k in raw for k in ["enforcement", "investigation", "penalty", "fine", "probe", "sec"]):
-        return "enforcement"
-    if any(k in raw for k in ["contract", "award", "procurement", "usaspending"]):
-        return "contract"
-    if "fda" in raw or "drug" in raw or "approval" in raw:
-        return "fda"
-    if "foia" in raw:
-        return "foia"
-    if "gdelt" in raw:
-        return "gdelt"
-    return str(event_type or "unknown").lower()
-
-
-def _source_credibility(source: str) -> float:
-    text = str(source or "").lower()
-    for key, weight in SOURCE_CREDIBILITY.items():
-        if key in text:
-            return weight
-    return 0.75 if text else 0.7
-
-
-def _label_from_return(ret: float, horizon: str) -> int:
-    threshold = HORIZON_LABEL_THRESHOLDS.get(horizon, 0.75)
-    try:
-        val = float(ret or 0.0)
-    except Exception:
-        val = 0.0
-    if abs(val) < threshold:
-        return NO_SIGNAL_LABEL
-    return UP_LABEL if val > 0 else DOWN_LABEL
-
-
-def _direction_from_label(label: int) -> str:
-    if label == UP_LABEL:
-        return "UP"
-    if label == DOWN_LABEL:
-        return "DOWN"
-    return "NO_SIGNAL"
-
-
-def _confidence_from_proba(probabilities: np.ndarray) -> float:
-    if probabilities.size == 0:
-        return 0.0
-    top = float(np.max(probabilities))
-    if probabilities.size < 2:
-        return top
-    second = float(np.partition(probabilities.flatten(), -2)[-2])
-    # Use both absolute probability and edge over the runner-up.
-    edge = max(0.0, top - second)
-    return float(np.clip((top * 0.7) + (edge * 0.6), 0.0, 1.0))
 
 
 class GovernmentEventPredictor:
@@ -255,11 +138,8 @@ class GovernmentEventPredictor:
             with open(self.model_dir / f"scaler_{horizon}.pkl", "wb") as f:
                 pickle.dump(self.scalers[horizon], f)
 
-    def _save_best_params(self, horizon: str, params: Dict, test_acc: float, cv_score: float, metrics: Optional[Dict] = None):
-        payload = {"params": params, "test_acc": test_acc, "cv_score": cv_score}
-        if metrics:
-            payload.update(metrics)
-        self._best_params[horizon] = payload
+    def _save_best_params(self, horizon: str, params: Dict, test_acc: float, cv_score: float):
+        self._best_params[horizon] = {"params": params, "test_acc": test_acc, "cv_score": cv_score}
         path = self.model_dir / "best_params.json"
         existing = {}
         if path.exists():
@@ -309,34 +189,6 @@ class GovernmentEventPredictor:
                 self._feature_importance = json.loads(path.read_text())
             except Exception:
                 pass
-
-    def _build_sample_weights(self, df: pd.DataFrame, horizon: str) -> np.ndarray:
-        if df.empty:
-            return np.array([])
-
-        weights = compute_sample_weight(class_weight="balanced", y=df["label"].values)
-        weights = np.asarray(weights, dtype=float)
-
-        if "event_date" in df.columns:
-            dates = pd.to_datetime(df["event_date"], errors="coerce")
-            if dates.notna().any():
-                max_dt = dates.max()
-                age_days = (max_dt - dates).dt.days.fillna(180).clip(lower=0, upper=3650)
-                recency = 1.0 + np.exp(-age_days / 365.0)
-                weights *= recency.fillna(1.0).to_numpy(dtype=float)
-
-        if "source" in df.columns:
-            source_weights = df["source"].fillna("").map(_source_credibility).astype(float).clip(0.65, 1.0)
-            weights *= source_weights.to_numpy(dtype=float)
-
-        ret_col = f"return_{horizon}"
-        if ret_col in df.columns:
-            threshold = HORIZON_LABEL_THRESHOLDS.get(horizon, 0.75)
-            move = df[ret_col].fillna(0).abs().astype(float)
-            move_boost = 1.0 + np.clip(move / max(threshold, 0.1), 0.0, 1.5)
-            weights *= move_boost.to_numpy(dtype=float)
-
-        return np.clip(weights, 0.25, 6.0)
 
     # ── Feature engineering ───────────────────────────────────────────────────
 
@@ -394,7 +246,6 @@ class GovernmentEventPredictor:
             for i, e in enumerate(tevents):
                 dt    = e["_dt"]
                 etype = e.get("event_type", "").lower()
-                normalized_event_type = _normalize_event_type(etype, e.get("event_title", ""), e.get("source", ""))
 
                 prev  = tevents[:i]
                 win7  = [x for x in prev if (dt - x["_dt"]).days <= 7]
@@ -454,34 +305,6 @@ class GovernmentEventPredictor:
                 title            = e.get("event_title", "") or ""
                 title_length_norm = min(len(title.split()) / 30.0, 1.0)
 
-                # v4: 3d-targeted features
-                win3 = [x for x in prev if (dt - x["_dt"]).days <= 3]
-                event_cluster_3d = len(win3)
-
-                stk_mom = e.get("stock_momentum_3d", 0.0) or 0.0
-                mkt_mom = e.get("market_momentum_3d", 0.0) or 0.0
-                momentum_agreement = 1 if (stk_mom > 0 and mkt_mom > 0) or (stk_mom < 0 and mkt_mom < 0) else 0
-
-                signal_vix_interaction = float(signal_score) * float(vix_level) / 100.0
-
-                ret5_vals = [x.get("return_1d", 0) or 0 for x in win7[-5:]]
-                avg_return_5d = float(np.mean(ret5_vals)) if ret5_vals else 0.0
-
-                # v5: 3d-specific autocorrelation and regime features
-                return_3d_lag1 = float(tevents[i - 1].get("return_3d", 0) or 0) if i > 0 else 0.0
-
-                past_r3 = [x.get("return_3d", 0) or 0 for x in win7]
-                vol_3d   = float(np.std(past_r3)) if len(past_r3) > 1 else 0.0
-                vol_ratio_3d = float(np.clip(vol_3d / (volatility + 1e-6), 0, 5))
-
-                is_contract = 1 if "contract" in etype else 0
-                mkt_bullish = 1 if mkt_mom > 0 else 0
-                contract_bullish_ix = float(is_contract * mkt_bullish)
-
-                momentum_strength = float(abs(stk_mom))
-
-                days_to_week_end = float((4 - dt.weekday()) % 7)  # 0=Fri, 1=Thu, ...
-
                 row = {
                     "event_type_foia":            1 if "foia"       in etype else 0,
                     "event_type_contract":         1 if "contract"   in etype else 0,
@@ -489,13 +312,6 @@ class GovernmentEventPredictor:
                     "event_type_sec_filing":       1 if "sec"        in etype else 0,
                     "event_type_fda_action":       1 if "fda"        in etype else 0,
                     "event_type_gdelt":            1 if "gdelt"      in etype else 0,
-                    "event_type_insider":          1 if "insider"    in normalized_event_type else 0,
-                    "event_type_earnings":         1 if "earnings"   in normalized_event_type else 0,
-                    "event_type_macro":            1 if "macro"      in normalized_event_type else 0,
-                    "event_type_geopolitical":     1 if "geopolitical" in normalized_event_type else 0,
-                    "event_type_legal":            1 if "legal"      in normalized_event_type else 0,
-                    "event_type_policy":           1 if "policy"     in normalized_event_type else 0,
-                    "event_type_enforcement":      1 if "enforcement" in normalized_event_type else 0,
                     "signal_score":                signal_score,
                     "vader_positive":              vader_pos,
                     "vader_negative":              vader_neg,
@@ -531,22 +347,7 @@ class GovernmentEventPredictor:
                     "pe_ratio":            float(e.get("pe_ratio") or 0),
                     "revenue_growth_yoy":  float(e.get("revenue_growth_yoy") or 0),
                     "earnings_surprise":   float(e.get("earnings_surprise") or 0),
-                    # v4: 3d-targeted
-                    "event_cluster_3d":       event_cluster_3d,
-                    "momentum_agreement":     momentum_agreement,
-                    "signal_vix_interaction": signal_vix_interaction,
-                    "avg_return_5d":          avg_return_5d,
-                    # v5: 3d autocorrelation + regime
-                    "return_3d_lag1":         return_3d_lag1,
-                    "vol_ratio_3d":           vol_ratio_3d,
-                    "contract_bullish_ix":    contract_bullish_ix,
-                    "momentum_strength":      momentum_strength,
-                    "days_to_week_end":       days_to_week_end,
-                    "source_credibility":     _source_credibility(e.get("source", "")),
-                    "event_date": dt.isoformat(),
-                    "source": e.get("source", ""),
-                    "normalized_event_type": normalized_event_type,
-                    "label": _label_from_return(e.get(target_col), horizon),
+                    "label": 1 if (e.get(target_col) or 0) > 0 else 0,
                 }
                 rows.append(row)
 
@@ -554,21 +355,12 @@ class GovernmentEventPredictor:
 
     # ── Training ──────────────────────────────────────────────────────────────
 
-    def train_model(
-        self,
-        correlation_data: Dict,
-        n_iter: int = 40,
-        cv: int = 4,
-        n_jobs: int = 1,
-        max_samples: Optional[int] = None,
-    ) -> Dict:
+    def train_model(self, correlation_data: Dict, n_iter: int = 40, cv: int = 4) -> Dict:
         """
         Train one XGBoost (or GBM fallback) per horizon via RandomizedSearchCV.
         SMOTE oversampling is applied to balance minority class when n_train < 800.
         n_iter  — random hyperparameter combinations to try (default 40)
         cv      — stratified CV folds inside the search (default 4)
-        n_jobs  — parallel jobs for RandomizedSearchCV (default 1)
-        max_samples — optional stratified cap per horizon for quick refreshes
         """
         model_label = "XGBoost" if _HAS_XGB else "GradientBoosting"
         print(f"  Using model: {model_label}  SMOTE: {'yes' if _HAS_SMOTE else 'no'}")
@@ -586,25 +378,16 @@ class GovernmentEventPredictor:
             if ref_df is None:
                 ref_df = df
 
-            if max_samples and len(df) > max_samples:
-                samples = []
-                for _, group in df.groupby("label"):
-                    n_group = max(1, round(max_samples * len(group) / len(df)))
-                    samples.append(group.sample(n=min(len(group), n_group), random_state=42))
-                df = pd.concat(samples, ignore_index=True).sample(frac=1, random_state=42).reset_index(drop=True)
-                print(f"  [{h}] Stratified sample cap applied → {len(df)} samples")
-
             X = df[self.feature_names].fillna(0).values.astype(float)
             y = df["label"].values.astype(int)
-            sample_weights = self._build_sample_weights(df, h)
 
             class_counts = np.bincount(y)
             minority_ratio = class_counts.min() / max(class_counts.max(), 1)
             print(f"  [{h}] {len(df)} samples  class balance: {class_counts}  "
                   f"minority ratio: {minority_ratio:.2f}")
 
-            X_train, X_test, y_train, y_test, w_train, w_test = train_test_split(
-                X, y, sample_weights, test_size=0.2, random_state=42, stratify=y
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=0.2, random_state=42, stratify=y
             )
 
             # SMOTE: balance training set when minority class < 40% and n_train ≥ 60
@@ -642,25 +425,16 @@ class GovernmentEventPredictor:
                 param_distributions=param_dist,
                 n_iter=n_iter,
                 cv=cv_strat,
-                scoring="balanced_accuracy",
-                n_jobs=n_jobs,
+                scoring="accuracy",
+                n_jobs=-1,
                 random_state=42,
                 verbose=0,
             )
-            search.fit(X_tr_s, y_train, sample_weight=w_train)
+            search.fit(X_tr_s, y_train)
 
             best_model = search.best_estimator_
-            y_pred = best_model.predict(X_te_s)
-            y_prob = best_model.predict_proba(X_te_s)
-            test_acc   = accuracy_score(y_test, y_pred)
-            bal_acc    = balanced_accuracy_score(y_test, y_pred)
-            macro_f1   = f1_score(y_test, y_pred, average="macro")
-            try:
-                ll = log_loss(y_test, y_prob, labels=list(best_model.classes_))
-            except Exception:
-                ll = None
+            test_acc   = best_model.score(X_te_s, y_test)
             cv_score   = search.best_score_
-            mean_conf  = float(np.mean(np.max(y_prob, axis=1))) if len(y_prob) else 0.0
 
             self.models[h]  = best_model
             self.scalers[h] = scaler
@@ -669,14 +443,6 @@ class GovernmentEventPredictor:
                 h, search.best_params_,
                 round(test_acc * 100, 2),
                 round(cv_score * 100, 2),
-                metrics={
-                    "balanced_test_acc": round(bal_acc * 100, 2),
-                    "macro_f1": round(macro_f1 * 100, 2),
-                    "log_loss": round(float(ll), 4) if ll is not None else None,
-                    "mean_confidence": round(mean_conf, 4),
-                    "label_mode": "3-class" if len(np.unique(y)) >= 3 else "binary",
-                    "no_signal_threshold": HORIZON_LABEL_THRESHOLDS.get(h, 0.75),
-                },
             )
 
             importances = best_model.feature_importances_
@@ -691,15 +457,12 @@ class GovernmentEventPredictor:
 
             results[h] = {
                 "accuracy":    round(test_acc * 100, 2),
-                "balanced_accuracy": round(bal_acc * 100, 2),
-                "macro_f1":   round(macro_f1 * 100, 2),
                 "cv_score":    round(cv_score * 100, 2),
                 "samples":     len(df),
                 "model":       model_label,
                 "best_params": search.best_params_,
-                "mean_confidence": round(mean_conf, 4),
             }
-            print(f"  ✓ {h}: test={round(test_acc*100,2)}%  bal={round(bal_acc*100,2)}%  cv={round(cv_score*100,2)}%  "
+            print(f"  ✓ {h}: test={round(test_acc*100,2)}%  cv={round(cv_score*100,2)}%  "
                   f"on {len(df)} events")
             print(f"    params: {search.best_params_}")
 
@@ -719,19 +482,11 @@ class GovernmentEventPredictor:
             for h in self.horizons:
                 if h in self.models:
                     Xs   = self.scalers[h].transform(X)
-                    model = self.models[h]
-                    prob  = model.predict_proba(Xs)[0]
-                    pred_idx = int(np.argmax(prob))
-                    pred_cls = int(model.classes_[pred_idx]) if hasattr(model, "classes_") else pred_idx
-                    direction = _direction_from_label(pred_cls)
-                    confidence = _confidence_from_proba(np.asarray(prob))
-                    if direction != "NO_SIGNAL":
-                        runner_up = float(np.partition(np.asarray(prob).flatten(), -2)[-2]) if len(prob) > 1 else 0.0
-                        if confidence < 0.46 or (float(np.max(prob)) - runner_up) < 0.10:
-                            direction = "NO_SIGNAL"
+                    p    = self.models[h].predict(Xs)[0]
+                    prob = self.models[h].predict_proba(Xs)[0]
 
                     # Top 5 feature drivers for this horizon
-                    imp = model.feature_importances_
+                    imp = self.models[h].feature_importances_
                     top_idx = np.argsort(imp)[::-1][:5]
                     top_drivers = [
                         {
@@ -743,12 +498,8 @@ class GovernmentEventPredictor:
                     ]
 
                     preds[h] = {
-                        "direction":   direction,
-                        "confidence":  round(float(confidence), 3),
-                        "probabilities": {
-                            _direction_from_label(int(cls)): round(float(prob[i]), 4)
-                            for i, cls in enumerate(model.classes_)
-                        },
+                        "direction":   "UP" if p == 1 else "DOWN",
+                        "confidence":  round(float(max(prob)), 3),
                         "top_drivers": top_drivers,
                     }
                 else:
@@ -912,13 +663,6 @@ class GovernmentEventPredictor:
             "event_type_sec_filing":      1 if "sec"        in event_type.lower() else 0,
             "event_type_fda_action":      1 if "fda"        in event_type.lower() else 0,
             "event_type_gdelt":           1 if "gdelt"      in event_type.lower() else 0,
-            "event_type_insider":         1 if "insider"    in event_type.lower() else 0,
-            "event_type_earnings":        1 if "earnings"   in event_type.lower() else 0,
-            "event_type_macro":           1 if "macro"      in event_type.lower() else 0,
-            "event_type_geopolitical":    1 if "geopolitical" in event_type.lower() else 0,
-            "event_type_legal":           1 if "legal"      in event_type.lower() else 0,
-            "event_type_policy":          1 if "policy"     in event_type.lower() else 0,
-            "event_type_enforcement":     1 if "enforcement" in event_type.lower() else 0,
             # NLP signals — from dataset medians
             "signal_score":               signal_score,
             "vader_positive":             s.get("vader_positive",            0.083),
@@ -957,7 +701,6 @@ class GovernmentEventPredictor:
             "high_vix":                   1 if vix_default > 25 else 0,
             "title_length_norm":          s.get("title_length_norm", 0.2),
             "foia_count_90d":             s.get("foia_count_90d", 0),
-            "source_credibility":         s.get("source_credibility", 0.75),
         })
         return self.predict_impact(features)
 

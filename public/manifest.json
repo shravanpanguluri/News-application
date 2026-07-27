@@ -1,0 +1,25 @@
+{
+  "short_name": "Predovex",
+  "name": "Predovex — Markets & Intelligence",
+  "description": "AI-powered government intelligence, stock predictions, and breaking news.",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "predovex-icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0a0e1a",
+  "background_color": "#0a0e1a",
+  "categories": ["finance", "news"],
+  "lang": "en-US"
+}

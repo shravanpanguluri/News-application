@@ -1,0 +1,244 @@
+.trending-news-container {
+  padding: 20px 0;
+}
+
+.trending-header {
+  text-align: center;
+  margin-bottom: 28px !important;
+}
+
+.trending-header .ui.icon {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+.trending-stats {
+  margin-bottom: 28px !important;
+}
+
+/* =============================================
+   TRENDING CARD
+   ============================================= */
+.trending-card {
+  transition: all 0.3s ease !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.trending-card:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.14) !important;
+}
+
+.trending-card.top-story {
+  border-left: 4px solid #e74c3c !important;
+}
+
+.trending-rank {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.rank-badge {
+  background: rgba(0,0,0,0.7);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.rank-badge.hot {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  animation: glow 2s infinite;
+}
+
+.rank-badge.rising {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(231, 76, 60, 0.8);
+  }
+}
+
+.trending-image {
+  max-height: 240px !important;
+  width: 100% !important;
+  object-fit: cover !important;
+  border-radius: 8px !important;
+}
+
+.trending-image-placeholder {
+  height: 240px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
+
+.trending-title {
+  font-size: 18px !important;
+  line-height: 1.4 !important;
+  margin-bottom: 10px !important;
+}
+
+.trending-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 10px 0 !important;
+  color: #666;
+  font-size: 13px;
+}
+
+.trending-meta span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.trending-description {
+  margin-top: 10px !important;
+  color: #555;
+  line-height: 1.6 !important;
+}
+
+.trending-content-preview {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trending-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* =============================================
+   MOBILE (≤ 480px)
+   ============================================= */
+@media (max-width: 480px) {
+  .trending-title {
+    font-size: 15px !important;
+  }
+
+  .trending-image {
+    max-height: 180px !important;
+  }
+
+  .trending-image-placeholder {
+    height: 180px;
+  }
+
+  .rank-badge {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+
+  .trending-meta {
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .trending-stats .ui.grid {
+    font-size: 12px;
+  }
+
+  .trending-stats .ui.statistic {
+    margin: 0 !important;
+  }
+
+  .trending-stats .ui.statistic .value {
+    font-size: 1.8rem !important;
+  }
+}
+
+/* =============================================
+   TABLET (481px – 1024px)
+   ============================================= */
+@media (min-width: 481px) and (max-width: 1024px) {
+  .trending-title {
+    font-size: 16px !important;
+  }
+
+  .trending-image {
+    max-height: 210px !important;
+  }
+
+  .trending-image-placeholder {
+    height: 210px;
+  }
+
+  .rank-badge {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+}
+
+/* =============================================
+   PROJECTOR (≥ 1441px)
+   ============================================= */
+@media (min-width: 1441px) {
+  .trending-title {
+    font-size: 22px !important;
+  }
+
+  .trending-image {
+    max-height: 300px !important;
+  }
+
+  .trending-image-placeholder {
+    height: 300px;
+  }
+
+  .rank-badge {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+
+  .trending-meta {
+    font-size: 15px;
+  }
+
+  .trending-description {
+    font-size: 15px !important;
+  }
+}

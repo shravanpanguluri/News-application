@@ -90,18 +90,6 @@ const GovShorts = ({ articles = [], onArticleClick }) => {
     const isPrevSwipe   = dragX > 25;
     const canGoNext     = currentIndex < articles.length - 1;
     const canGoPrev     = currentIndex > 0;
-    const articleBody    = article.content || article.description || '';
-    const articleExcerpt = articleBody.length > 420 ? articleBody.substring(0, 420) + '...' : articleBody;
-    const stopActionPropagation = (event) => {
-        event.stopPropagation();
-    };
-    const openFullAnalysis = (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        setIsDragging(false);
-        setDragX(0);
-        if (onArticleClick) onArticleClick(article);
-    };
 
     /* ── Shared card inner content ───────────────── */
     const CardInner = () => (
@@ -133,39 +121,24 @@ const GovShorts = ({ articles = [], onArticleClick }) => {
                     </p>
                 </div>
 
-                {articleExcerpt && (
-                    <div className="short-article-excerpt">
-                        <Header as="h3"><Icon name="newspaper outline" /> ARTICLE</Header>
-                        <p>{articleExcerpt}</p>
-                    </div>
-                )}
-
                 <div className="short-meta">
                     <Label basic color="red">
                         <Icon name="shield" />
-                        PREDOVEX INTELLIGENCE
+                        GOVPULSE INTELLIGENCE
                     </Label>
                     <Label basic><Icon name="globe" /> {(article.country || 'Global').toUpperCase()}</Label>
                     <Label basic><Icon name="wait" /> 30s read</Label>
                 </div>
             </div>
 
-            <div
-                className="short-actions"
-                onMouseDown={stopActionPropagation}
-                onMouseMove={stopActionPropagation}
-                onMouseUp={stopActionPropagation}
-                onTouchStart={stopActionPropagation}
-                onTouchMove={stopActionPropagation}
-                onTouchEnd={stopActionPropagation}
-            >
-                <Button primary fluid size="huge" type="button" onClick={openFullAnalysis}>
+            <div className="short-actions">
+                <Button primary fluid size="huge" onClick={() => onArticleClick(article)}>
                     <Icon name="expand" /> FULL ANALYSIS
                 </Button>
                 <div className="social-row">
                     <Button
                         circular color="twitter" icon="twitter"
-                        onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title + ' - via Predovex Intelligence Platform')}`)}
+                        onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title + ' - via GovPulse Intelligence Platform')}`)}
                     />
                     <Button
                         circular color="linkedin" icon="linkedin"

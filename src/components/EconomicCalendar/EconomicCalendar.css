@@ -1,0 +1,482 @@
+/* =============================================
+   ECONOMIC CALENDAR WRAPPER
+   ============================================= */
+.econ-calendar {
+    padding: 0 4px;
+}
+
+/* =============================================
+   FILTER CHIPS — single horizontally scrollable row
+   ============================================= */
+.econ-filters {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 6px;
+    margin-bottom: 16px;
+    padding-bottom: 4px;
+}
+.econ-filters::-webkit-scrollbar { display: none; }
+
+.econ-filter-btn {
+    flex-shrink: 0;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.econ-filter-btn:hover {
+    background: var(--bg-secondary);
+    border-color: var(--accent-mid);
+    color: var(--accent-mid);
+}
+
+.econ-filter-btn--active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+
+/* =============================================
+   SECTION LABEL
+   ============================================= */
+.econ-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* =============================================
+   EVENT ROW
+   ============================================= */
+.econ-event {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 8px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    background: var(--bg-secondary);
+    border-left: 3px solid transparent;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    cursor: pointer;
+}
+
+.econ-event:hover {
+    background: var(--bg-color);
+    border-left-color: var(--accent-sky);
+}
+
+.econ-event--past { opacity: 0.55; }
+
+.econ-event--today {
+    background: rgba(249, 168, 37, 0.07);
+    border-left-color: #f9a825;
+}
+
+/* ── Date column ── */
+.econ-event__date-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 36px;
+    padding-top: 1px;
+}
+
+.econ-event__day-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.econ-event__month {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    margin-top: 2px;
+    letter-spacing: 0.5px;
+}
+
+/* ── Body ── */
+.econ-event__body {
+    flex: 1;
+    min-width: 0;
+}
+
+.econ-event__title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-color);
+    line-height: 1.4;
+    margin-bottom: 3px;
+    word-break: break-word;
+}
+
+.econ-event__sub {
+    font-size: 10px;
+    color: var(--text-secondary);
+}
+
+/* ── Right (countdown + impact + chevron) ── */
+.econ-event__right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
+    gap: 4px;
+    min-width: 64px;
+}
+
+.econ-event__countdown {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.econ-event__countdown--today { color: #f9a825; }
+
+.econ-event__chevron {
+    color: var(--text-secondary) !important;
+    opacity: 0.7;
+    margin: 2px 0 0 0 !important;
+}
+
+/* =============================================
+   PAGINATION
+   ============================================= */
+.econ-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    margin-top: 16px;
+    padding: 10px 0;
+    flex-wrap: wrap;
+}
+
+.econ-pagination .ui.button {
+    min-width: 34px;
+    height: 34px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    background: var(--card-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-secondary) !important;
+    transition: all 0.18s ease;
+}
+
+.econ-pagination .ui.button:hover:not(:disabled) {
+    background: var(--bg-secondary) !important;
+    border-color: var(--accent-mid) !important;
+    color: var(--accent-mid) !important;
+    transform: translateY(-1px);
+}
+
+.econ-pagination .ui.button:disabled {
+    opacity: 0.35 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+}
+
+.econ-pagination .ui.button.active {
+    background: var(--accent) !important;
+    color: white !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 2px 8px var(--accent-glow);
+}
+
+.econ-pagination .ui.icon.button { padding: 6px 8px; }
+.econ-pagination .ui.icon.button .icon { margin: 0 !important; }
+
+.econ-pagination-ellipsis {
+    display: flex;
+    align-items: center;
+    padding: 0 2px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    user-select: none;
+    height: 34px;
+}
+
+/* Compact "N / Total" pill shown only on mobile */
+.econ-page-counter {
+    display: none;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    padding: 4px 12px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+/* =============================================
+   INSIGHTS PANEL
+   ============================================= */
+.econ-event-insights {
+    animation: slideDown 0.22s ease-out;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.06) 0%, rgba(118, 75, 162, 0.06) 100%);
+    border: 1px solid rgba(102, 126, 234, 0.18);
+    border-radius: 8px;
+    padding: 14px;
+    margin-left: 46px;
+    margin-bottom: 10px;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.econ-event-insights h6.ui.header {
+    margin-bottom: 8px !important;
+    font-size: 12px !important;
+    color: var(--text-color) !important;
+}
+
+.econ-event-insights > div:first-child > p {
+    margin: 0 0 10px 0 !important;
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.econ-event-insights ul {
+    margin: 6px 0 !important;
+    padding-left: 18px !important;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.econ-event-insights .econ-insights-grid { margin: 10px 0 !important; }
+.econ-event-insights .econ-insights-grid .column { padding: 6px !important; }
+
+.econ-event-insights strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 11px;
+    color: var(--text-color);
+}
+
+.econ-event-insights .market-impact-label { color: #e65100; }
+
+.econ-event-insights .market-impact {
+    margin: 4px 0 0 0 !important;
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.econ-event-insights .key-terms-label {
+    color: #6a1b9a;
+    display: block;
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
+
+.econ-event-insights .ui.label.tiny {
+    margin-right: 4px !important;
+    margin-bottom: 4px !important;
+}
+
+.econ-event-insights .source-section {
+    border-top: 1px solid rgba(102, 126, 234, 0.18);
+    padding-top: 10px;
+    margin-top: 10px;
+}
+
+.econ-event-insights .source-section > strong {
+    color: #2e7d32;
+    margin-bottom: 6px;
+}
+
+.econ-event-insights .source-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+}
+
+.econ-event-insights .source-content > div:first-child {
+    flex: 1;
+    min-width: 160px;
+}
+
+.econ-event-insights .source-link {
+    color: #1976d2 !important;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.econ-event-insights .source-link:hover { text-decoration: underline; }
+
+.econ-event-insights .source-description {
+    margin: 3px 0 0 0 !important;
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.econ-event-insights .disclaimer {
+    margin-top: 10px !important;
+    font-size: 10px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+/* =============================================
+   DARK MODE — insights panel
+   ============================================= */
+.dark-mode .econ-event-insights {
+    background: linear-gradient(135deg, rgba(30, 38, 54, 0.8) 0%, rgba(37, 48, 69, 0.8) 100%);
+    border-color: rgba(102, 126, 234, 0.25);
+}
+
+.dark-mode .econ-event-insights .market-impact    { color: #ffcc80 !important; }
+.dark-mode .econ-event-insights .key-terms-label  { color: #ce93d8 !important; }
+.dark-mode .econ-event-insights .source-section   { border-top-color: rgba(102, 126, 234, 0.25) !important; }
+.dark-mode .econ-event-insights .source-section > strong { color: #81c784 !important; }
+.dark-mode .econ-event-insights .source-link      { color: #4fc3f7 !important; }
+
+/* =============================================
+   MOBILE (≤ 480px)
+   ============================================= */
+@media (max-width: 480px) {
+    .econ-filter-btn { font-size: 11px; padding: 4px 10px; }
+
+    .econ-event { padding: 8px 6px; gap: 8px; }
+
+    .econ-event__date-col { width: 30px; }
+
+    .econ-event__day-badge {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+        border-radius: 6px;
+    }
+
+    .econ-event__title  { font-size: 11.5px; }
+    .econ-event__sub    { font-size: 9.5px; }
+
+    .econ-event__right  { min-width: 44px; gap: 3px; }
+
+    /* Hide countdown on mobile — too cramped */
+    .econ-event__countdown { display: none; }
+
+    /* Pagination: hide numbered pages, show Prev · N/Total · Next */
+    .econ-page-btn         { display: none !important; }
+    .econ-pagination-ellipsis { display: none; }
+    .econ-page-counter     { display: block; }
+
+    /* Insights panel flush to left */
+    .econ-event-insights {
+        margin-left: 6px;
+        margin-right: 0;
+        padding: 10px;
+        border-radius: 6px;
+    }
+
+    .econ-event-insights h6.ui.header  { font-size: 11px !important; margin-bottom: 5px !important; }
+    .econ-event-insights > div:first-child > p { font-size: 11px; }
+
+    /* Stack the two insight columns */
+    .econ-event-insights .econ-insights-grid {
+        display: flex !important;
+        flex-direction: column;
+    }
+
+    .econ-event-insights .econ-insights-grid .column {
+        width: 100% !important;
+        margin-bottom: 10px !important;
+        padding: 4px !important;
+    }
+
+    .econ-event-insights .econ-insights-grid .column:last-child { margin-bottom: 0 !important; }
+
+    .econ-event-insights .source-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .econ-event-insights .source-content > div:first-child {
+        min-width: 0;
+        width: 100%;
+        margin-bottom: 8px;
+    }
+
+    .econ-event-insights .ui.button.small {
+        font-size: 11px;
+        padding: 8px 12px;
+        width: 100%;
+    }
+}
+
+/* =============================================
+   TABLET (481px – 1024px)
+   ============================================= */
+@media (min-width: 481px) and (max-width: 1024px) {
+    .econ-event-insights { margin-left: 10px; padding: 12px; }
+
+    .econ-event-insights .source-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .econ-event-insights .source-content > div:first-child {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+}
+
+/* =============================================
+   PROJECTOR (≥ 1441px)
+   ============================================= */
+@media (min-width: 1441px) {
+    .econ-event         { padding: 14px 10px; }
+    .econ-event__title  { font-size: 13px; }
+    .econ-event__sub    { font-size: 11px; }
+    .econ-event__countdown { font-size: 12px; }
+
+    .econ-event__day-badge {
+        width: 38px;
+        height: 38px;
+        font-size: 15px;
+    }
+
+    .econ-event__right  { min-width: 80px; }
+
+    .econ-pagination .ui.button { min-width: 38px; height: 38px; font-size: 13px; }
+}

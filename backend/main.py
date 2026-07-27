@@ -1,5 +1,5 @@
 """
-Main FastAPI Application - Predovex Intelligence Platform
+Main FastAPI Application - GovPulse Intelligence Platform
 """
 from fastapi import FastAPI, HTTPException, Depends, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,16 +12,18 @@ from datetime import datetime, timedelta, timezone
 import jwt
 import secrets
 import asyncio
+from dotenv import load_dotenv
 from sqlalchemy import create_engine, or_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from passlib.context import CryptContext
 
 import time
-import models.models as db_models
+import os
 
-# In-memory RSS cache — avoids re-fetching 15 feeds on every request
-_rss_cache = {}  # key: (category, country) -> {"articles": [...], "ts": float}
+load_dotenv()
+
+import models.models as db_models
 from services.government_api import gov_intelligence
 from services.rss_feed import rss_service
 from services.article_fetcher import article_fetcher
@@ -29,7 +31,6 @@ from services.market_data import market_data_service
 from services.analytics import analytics_service
 # New API Services
 from services.stock_data_service import stock_data_service
-from services.finnhub_service import finnhub_service
 from services.contracts_service import contracts_service
 from services.news_api_service import news_api_service
 from services.fred_service import fred_service
@@ -45,8 +46,35 @@ from services.analysis_training_collector import analysis_training_collector
 from services.analysis_model_trainer import analysis_model_trainer
 
 # Database setup
-SQLALCHEMY_DATABASE_URL = "sqlite:///./government_intelligence.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+#
+# Local development continues to use SQLite. Render (or another hosted
+# provider) can inject a PostgreSQL URL through DATABASE_URL. SQLAlchemy's
+# synchronous session is intentionally retained for compatibility with the
+# existing API and models.
+SQLALCHEMY_DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "sqlite:///./government_intelligence.db",
+)
+if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace(
+        "postgres://", "postgresql+psycopg2://", 1
+    )
+elif SQLALCHEMY_DATABASE_URL.startswith("postgresql://"):
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace(
+        "postgresql://", "postgresql+psycopg2://", 1
+    )
+
+if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL,
+        connect_args={"check_same_thread": False},
+    )
+else:
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL,
+        pool_pre_ping=True,
+        pool_recycle=1800,
+    )
 db_models.Base.metadata.create_all(bind=engine)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -55,7 +83,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # App initialization
 app = FastAPI(
-    title="Predovex API",
+    title="GovPulse API",
     description="Aggregates government and market intelligence",
     version="1.0.0"
 )
@@ -72,9 +100,9 @@ app.add_middleware(
 
 # Security
 security = HTTPBearer()
-SECRET_KEY = "your-secret-key-change-in-production"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+SECRET_KEY = os.getenv("SECRET_KEY", "local-development-only-change-me")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
 # ── Prediction cache (1-hour TTL per ticker) ──────────────────────────────────
 _prediction_cache: Dict[str, Dict] = {}
@@ -168,22 +196,13 @@ async def update_rss_task():
                     new_count += 1
             db.commit()
             
-            # Delete articles older than 6 days
-            stale_cutoff = datetime.now() - timedelta(days=6)
-            deleted = db.query(db_models.Article).filter(
-                db_models.Article.published_at < stale_cutoff
-            ).delete(synchronize_session=False)
-            db.commit()
-            if deleted:
-                print(f"[{datetime.now()}] Pruned {deleted} articles older than 6 days.")
-
-            # Safety cap: never keep more than 2000 articles
+            # Keep latest 300 for better diversity
             total = db.query(db_models.Article).count()
-            if total > 2000:
-                keep_ids = [i[0] for i in db.query(db_models.Article.id).order_by(db_models.Article.published_at.desc()).limit(2000).all()]
+            if total > 300:
+                keep_ids = [i[0] for i in db.query(db_models.Article.id).order_by(db_models.Article.published_at.desc()).limit(300).all()]
                 db.query(db_models.Article).filter(~db_models.Article.id.in_(keep_ids)).delete(synchronize_session=False)
                 db.commit()
-            print(f"[{datetime.now()}] Added {new_count} articles. Total in DB: {db.query(db_models.Article).count()}")
+            print(f"[{datetime.now()}] Added {new_count} news. Total capped at 300.")
         except Exception as e:
             print(f"Task Error: {e}")
             db.rollback()
@@ -193,16 +212,16 @@ async def update_rss_task():
 
 @app.on_event("startup")
 async def startup_event():
-    # Background RSS task — pruning old articles
-    asyncio.create_task(update_rss_task())
+    # Background RSS task disabled for stability
+    # asyncio.create_task(update_rss_task())
     
     # Create default users
     try:
         db = SessionLocal()
         test_users = [
-            {"email": "admin@predovex.com", "password": "password123", "tier": "enterprise"},
-            {"email": "user@predovex.com", "password": "password123", "tier": "pro"},
-            {"email": "free@predovex.com", "password": "password123", "tier": "free"}
+            {"email": "admin@govpulse.com", "password": "password123", "tier": "enterprise"},
+            {"email": "user@govpulse.com", "password": "password123", "tier": "pro"},
+            {"email": "free@govpulse.com", "password": "password123", "tier": "free"}
         ]
         for u in test_users:
             existing = db.query(db_models.User).filter(db_models.User.email == u["email"]).first()
@@ -219,7 +238,7 @@ async def startup_event():
     except Exception as e:
         print(f"Startup warning: {e}")
     
-    print("✅ Predovex Backend Started Successfully!")
+    print("✅ GovPulse Backend Started Successfully!")
     print("📡 API Docs: http://localhost:8000/docs")
     print("🏥 Health: http://localhost:8000/health")
 
@@ -242,7 +261,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
 # Endpoints
 @app.get("/")
 def read_root():
-    return {"message": "Predovex Intelligence API active"}
+    return {"message": "GovPulse Intelligence API active"}
 
 @app.post("/auth/register")
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
@@ -273,128 +292,53 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
 def get_me(user: db_models.User = Depends(get_current_user)):
     return {"email": user.email, "tier": user.tier, "watchlist": user.watchlist_keywords}
 
-RSS_CACHE_TTL = 300  # seconds (5 minutes)
-
 @app.get("/rss/all")
-def get_rss_news(category: str = "all", country: str = "all", force_refresh: bool = False, use_newsapi: bool = False, limit: int = 150, db: Session = Depends(get_db)):
-    """Serve from DB first (instant), refresh live cache in background"""
-    # 1. Always try DB first — instant, always populated
+def get_rss_news(category: str = "all", country: str = "all", force_refresh: bool = False, use_newsapi: bool = False, db: Session = Depends(get_db)):
+    """Get curated RSS news with de-duplication and quality ranking"""
     try:
-        cutoff = datetime.now() - timedelta(days=7)
-        q = db.query(db_models.Article).filter(db_models.Article.published_at >= cutoff)
-        if category and category != 'all':
-            q = q.filter(db_models.Article.category == category)
-        if country and country != 'all':
-            q = q.filter(db_models.Article.country == country)
-        db_articles = q.order_by(db_models.Article.published_at.desc()).limit(limit).all()
-        if db_articles:
-            result = [{
-                'title': a.title,
-                'description': a.description or '',
-                'ai_summary': a.ai_summary or a.description or '',
-                'url': a.url,
-                'source': a.source,
-                'published_at': a.published_at.isoformat() if a.published_at else None,
-                'category': a.category,
-                'country': a.country,
-                'sentiment': a.sentiment,
-                'impact_level': a.impact_level,
-                'impact_score': a.impact_score,
-                'tags': a.tags if hasattr(a, 'tags') else [],
-            } for a in db_articles]
-            return JSONResponse(content=jsonable_encoder(result), headers={"Cache-Control": "public, max-age=120, stale-while-revalidate=60"})
-    except Exception as e:
-        print(f"DB fetch error: {e}")
-
-    # 2. Fallback: in-memory cache or live RSS fetch
-    cache_key = (country,)
-    cached = _rss_cache.get(cache_key)
-    now = time.time()
-    if not force_refresh and cached and (now - cached["ts"]) < RSS_CACHE_TTL:
-        articles = cached["articles"]
-    else:
-        try:
-            articles = rss_service.fetch_all_feeds(country=country, max_age_days=7)
-            _rss_cache[cache_key] = {"articles": articles, "ts": now}
-        except Exception as e:
-            print(f"RSS fetch error: {e}")
-            articles = cached["articles"] if cached else []
-    try:
-        if category and category != 'all':
-            articles = [a for a in articles if a.get('category', '').lower() == category.lower()]
-        curated = news_quality_service.process_feed(articles, limit=limit)
-        return JSONResponse(content=jsonable_encoder(curated), headers={"Cache-Control": "public, max-age=120, stale-while-revalidate=60"})
+        from datetime import datetime, timedelta
+        cutoff_date = datetime.now() - timedelta(days=7)  # Only show articles from last 7 days
+        
+        # Fetch fresh RSS articles
+        articles = rss_service.fetch_all_feeds(country=country, max_age_days=7)
+        
+        # Process with quality service (de-duplicate, tier, rank)
+        curated_articles = news_quality_service.process_feed(articles, limit=30)
+        
+        return JSONResponse(content=jsonable_encoder(curated_articles))
+        
     except Exception as e:
         print(f"RSS Endpoint Error: {e}")
-        return JSONResponse(content=jsonable_encoder(articles[:limit]), headers={"Cache-Control": "public, max-age=120, stale-while-revalidate=60"})
+        # Fallback to basic RSS
+        articles = rss_service.fetch_all_feeds(country=country, max_age_days=7)
+        return JSONResponse(content=jsonable_encoder(articles[:20]))
 
 @app.get("/rss/breaking")
-def get_breaking_news(limit: int = 20, db: Session = Depends(get_db)):
-    """Get breaking news from DB (last 24h, highest impact first)"""
-    try:
-        cutoff = datetime.now() - timedelta(days=1)
-        rows = db.query(db_models.Article).filter(
-            db_models.Article.published_at >= cutoff
-        ).order_by(db_models.Article.published_at.desc()).limit(limit * 2).all()
-        if rows:
-            result = [{
-                'title': a.title, 'description': a.description or '',
-                'url': a.url, 'source': a.source,
-                'published_at': a.published_at.isoformat() if a.published_at else None,
-                'category': a.category, 'country': a.country,
-                'sentiment': a.sentiment, 'impact_level': a.impact_level,
-            } for a in rows[:limit]]
-            return JSONResponse(content=jsonable_encoder(result), headers={"Cache-Control": "public, max-age=60, stale-while-revalidate=30"})
-    except Exception as e:
-        print(f"DB breaking error: {e}")
-    # fallback
+def get_breaking_news(limit: int = 20):
+    """Get breaking news ranked by intelligent analysis"""
+    # Get fresh RSS articles
     articles = rss_service.fetch_all_feeds(max_age_days=1)
-    return JSONResponse(content=jsonable_encoder(articles[:limit]), headers={"Cache-Control": "public, max-age=60, stale-while-revalidate=30"})
+    
+    # Analyze with breaking news detector
+    breaking = breaking_news_detector.get_breaking_news(articles, limit=limit)
+    
+    return JSONResponse(content=jsonable_encoder(breaking))
 
 @app.get("/rss/trending-news")
-def get_trending_news(limit: int = 20, db: Session = Depends(get_db)):
-    """Get trending news from DB (last 48h)"""
-    try:
-        cutoff = datetime.now() - timedelta(days=2)
-        rows = db.query(db_models.Article).filter(
-            db_models.Article.published_at >= cutoff
-        ).order_by(db_models.Article.published_at.desc()).limit(limit).all()
-        if rows:
-            result = [{
-                'title': a.title, 'description': a.description or '',
-                'url': a.url, 'source': a.source,
-                'published_at': a.published_at.isoformat() if a.published_at else None,
-                'category': a.category, 'country': a.country,
-                'sentiment': a.sentiment, 'impact_level': a.impact_level,
-            } for a in rows]
-            return JSONResponse(content=jsonable_encoder(result), headers={"Cache-Control": "public, max-age=120, stale-while-revalidate=60"})
-    except Exception as e:
-        print(f"DB trending-news error: {e}")
-    articles = rss_service.fetch_all_feeds(max_age_days=2)
-    return JSONResponse(content=jsonable_encoder(articles[:limit]), headers={"Cache-Control": "public, max-age=120, stale-while-revalidate=60"})
+def get_trending_news(limit: int = 20):
+    """Get trending news based on intelligent analysis"""
+    # Get fresh RSS articles
+    articles = rss_service.fetch_all_feeds(max_age_days=1)
+    
+    # Analyze and get trending (score >= 50)
+    analyzed = breaking_news_detector.analyze_articles(articles)
+    trending = [a for a in analyzed if a.get('breaking_score', 0) >= 50][:limit]
+    
+    return JSONResponse(content=jsonable_encoder(trending))
 
 @app.get("/rss/trending")
-def get_trending_topics(limit: int = 10, db: Session = Depends(get_db)):
-    """Derive trending topics from DB article titles"""
-    try:
-        from collections import Counter
-        cutoff = datetime.now() - timedelta(days=2)
-        rows = db.query(db_models.Article.title).filter(
-            db_models.Article.published_at >= cutoff
-        ).limit(200).all()
-        if rows:
-            words = []
-            for (title,) in rows:
-                for w in (title or '').lower().split():
-                    if len(w) > 4 and w.isalpha():
-                        words.append(w)
-            top = Counter(words).most_common(limit)
-            return JSONResponse(content=jsonable_encoder([
-                {'topic': w, 'count': c} for w, c in top
-            ]))
-    except Exception as e:
-        print(f"DB trending error: {e}")
-    return JSONResponse(content=jsonable_encoder([]))
+def get_trending_topics(limit: int = 10):
+    return JSONResponse(content=jsonable_encoder(rss_service.fetch_trending_topics(limit)))
 
 @app.get("/markets/prices")
 def get_market_prices():
@@ -1099,34 +1043,6 @@ def get_stock_info(ticker: str):
 def get_stock_historical(ticker: str, period: str = '1mo'):
     """Get historical stock prices"""
     return stock_data_service.get_historical_data(ticker, period)
-
-@app.get("/api/stock/{ticker}/deep-dive")
-def get_stock_deep_dive(ticker: str):
-    """Comprehensive stock data: price, fundamentals, analyst consensus"""
-    data = stock_data_service.get_deep_dive(ticker)
-    if data.get('error'):
-        return data
-    # Overlay real Finnhub analyst data if API key is configured
-    if finnhub_service.available:
-        rec = finnhub_service.get_recommendations(ticker)
-        pt  = finnhub_service.get_price_target(ticker)
-        if rec:
-            data['analysts']['buy']  = rec['buy']
-            data['analysts']['hold'] = rec['hold']
-            data['analysts']['sell'] = rec['sell']
-            data['analysts']['period'] = rec.get('period', '')
-        if pt:
-            if pt.get('target'):      data['analysts']['target']      = pt['target']
-            if pt.get('target_high'): data['analysts']['target_high'] = pt['target_high']
-            if pt.get('target_low'):  data['analysts']['target_low']  = pt['target_low']
-        data['finnhub_news'] = finnhub_service.get_company_news(ticker)
-        data['next_earnings'] = finnhub_service.get_earnings(ticker)
-    return data
-
-@app.get("/api/stocks/screener")
-def get_stocks_screener():
-    """Live prices for 90+ popular stocks organised by category"""
-    return stock_data_service.get_screener()
 
 @app.get("/api/stock/market-movers/{sector}")
 def get_market_movers(sector: str = 'technology'):
@@ -2019,12 +1935,9 @@ def predict_stock_impact(ticker: str, event_type: str,
         event_type=event_type,
         signal_score=signal_score
     )
-    primary = prediction.get("7d", {}) if isinstance(prediction, dict) else {}
     
     return {
         **prediction,
-        "prediction": primary.get("direction", "UNKNOWN"),
-        "confidence": primary.get("confidence", 0.0),
         "company": company_name or ticker,
         "interpretation": _interpret_prediction(prediction)
     }
@@ -2115,9 +2028,7 @@ def get_training_ready_events(min_days: int = 7):
 
 def _interpret_prediction(prediction: Dict) -> str:
     """Generate human-readable interpretation of prediction"""
-    if "7d" in prediction and isinstance(prediction.get("7d"), dict):
-        prediction = prediction.get("7d", {})
-    direction = prediction.get("direction") or prediction.get("prediction", "UNKNOWN")
+    direction = prediction.get("prediction", "UNKNOWN")
     confidence = prediction.get("confidence", 0.0)
     
     if confidence >= 0.8:
@@ -2131,8 +2042,6 @@ def _interpret_prediction(prediction: Dict) -> str:
         return f"{strength} bullish signal - stock likely to rise following this government event"
     elif direction == "DOWN":
         return f"{strength} bearish signal - stock likely to decline following this government event"
-    elif direction == "NO_SIGNAL":
-        return "No strong directional signal detected from this government event"
     else:
         return "Insufficient data to make a reliable prediction"
 
@@ -3475,354 +3384,3 @@ def get_backtest_evidence():
     """
     from services.backtesting_framework import backtester
     return backtester.generate_patent_evidence()
-
-
-# ============================================================================
-# FEATURE EXPANSION — Earnings, Insider Trading, Summarizer, Sentiment History
-#                     Geopolitical Risk, Event Explainer
-# ============================================================================
-
-@app.get("/api/earnings/upcoming")
-def get_upcoming_earnings(
-    tickers: str = "AAPL,MSFT,GOOGL,AMZN,TSLA,META,NVDA,JPM,BAC,XOM,LMT,RTX,BA,NOC,GD",
-    days: int = 45
-):
-    """Return upcoming earnings dates for the supplied tickers with ML direction prediction."""
-    import yfinance as yf
-    from datetime import datetime, timedelta
-    import json, pathlib
-
-    results = []
-    ticker_list = [t.strip().upper() for t in tickers.split(",") if t.strip()][:25]
-
-    # Load correlation data for ML prediction context
-    corr_path = pathlib.Path(__file__).parent / "correlation_data.json"
-    corr_events = []
-    try:
-        with open(corr_path) as f:
-            corr_events = json.load(f).get("events", [])
-    except Exception:
-        pass
-
-    today = datetime.now()
-    cutoff = today + timedelta(days=days)
-
-    for ticker in ticker_list:
-        try:
-            t = yf.Ticker(ticker)
-            info = t.fast_info
-
-            # Try calendar for earnings date
-            earnings_date = None
-            try:
-                cal = t.calendar
-                if cal is not None:
-                    if isinstance(cal, dict):
-                        ed = cal.get("Earnings Date")
-                        if ed and hasattr(ed, '__iter__'):
-                            ed_list = list(ed)
-                            if ed_list:
-                                earnings_date = ed_list[0]
-                    elif hasattr(cal, "columns"):
-                        if "Earnings Date" in cal.columns:
-                            ed = cal["Earnings Date"].iloc[0] if len(cal["Earnings Date"]) else None
-                            earnings_date = ed
-            except Exception:
-                pass
-
-            if earnings_date is None:
-                continue
-
-            # Convert to datetime
-            try:
-                if hasattr(earnings_date, "timestamp"):
-                    ed_dt = earnings_date.to_pydatetime()
-                else:
-                    ed_dt = datetime.fromisoformat(str(earnings_date)[:10])
-            except Exception:
-                continue
-
-            if ed_dt < today or ed_dt > cutoff:
-                continue
-
-            # Get ML prediction for this ticker
-            ml_direction = "NEUTRAL"
-            ml_confidence = 50
-            try:
-                ticker_events = [e for e in corr_events if e.get("ticker") == ticker]
-                if ticker_events:
-                    recent = sorted(ticker_events, key=lambda e: e.get("event_date", ""), reverse=True)[:10]
-                    up_count = sum(1 for e in recent if (e.get("return_7d") or 0) > 0)
-                    ml_confidence = int((up_count / len(recent)) * 100)
-                    ml_direction = "BULLISH" if ml_confidence >= 55 else "BEARISH" if ml_confidence <= 45 else "NEUTRAL"
-            except Exception:
-                pass
-
-            # Current price + EPS estimates
-            try:
-                price = round(float(info.last_price), 2)
-            except Exception:
-                price = None
-
-            eps_est = None
-            try:
-                eps_est = t.info.get("forwardEps")
-            except Exception:
-                pass
-
-            results.append({
-                "ticker": ticker,
-                "earnings_date": ed_dt.strftime("%Y-%m-%d"),
-                "days_until": (ed_dt - today).days,
-                "ml_direction": ml_direction,
-                "ml_confidence": ml_confidence,
-                "current_price": price,
-                "eps_estimate": eps_est,
-                "company_name": t.info.get("longName", ticker) if hasattr(t, "info") else ticker,
-            })
-        except Exception as e:
-            continue
-
-    results.sort(key=lambda r: r["days_until"])
-    return {"earnings": results, "count": len(results), "horizon_days": days}
-
-
-@app.get("/api/insider/{ticker}")
-def get_insider_trades(ticker: str, limit: int = 20):
-    """Fetch recent Form 4 insider trades from SEC EDGAR for a ticker."""
-    import requests as req
-    from datetime import datetime, timedelta
-
-    ticker = ticker.upper()
-    start = (datetime.now() - timedelta(days=180)).strftime("%Y-%m-%d")
-    end = datetime.now().strftime("%Y-%m-%d")
-
-    url = (
-        f"https://efts.sec.gov/LATEST/search-index"
-        f"?q=%22{ticker}%22&forms=4"
-        f"&dateRange=custom&startdt={start}&enddt={end}"
-        f"&hits.hits.total.value=true&hits.hits._source=period_of_report,entity_name,file_date,display_names,form_type"
-    )
-    headers = {"User-Agent": "Predovex Intelligence research@predovex.com"}
-
-    try:
-        r = req.get(url, headers=headers, timeout=10)
-        r.raise_for_status()
-        raw = r.json()
-        hits = raw.get("hits", {}).get("hits", [])
-    except Exception as e:
-        return {"ticker": ticker, "trades": [], "error": str(e)}
-
-    trades = []
-    for h in hits[:limit]:
-        src = h.get("_source", {})
-        trades.append({
-            "ticker": ticker,
-            "filer": src.get("display_names", [{"name": "Unknown"}])[0].get("name", "Unknown") if src.get("display_names") else "Unknown",
-            "form_type": src.get("form_type", "4"),
-            "file_date": src.get("file_date", ""),
-            "period": src.get("period_of_report", ""),
-            "entity": src.get("entity_name", ticker),
-            "link": f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&company={ticker}&type=4&dateb=&owner=include&count=10",
-        })
-
-    return {"ticker": ticker, "trades": trades, "count": len(trades)}
-
-
-@app.get("/api/article/summarize")
-@app.post("/api/article/summarize")
-def summarize_article(title: str = "", content: str = "", url: str = ""):
-    """Extractive summarizer — returns 3-sentence TLDR with no external AI key."""
-    import re
-    from collections import Counter
-
-    text = (content or title or "").strip()
-    if not text or len(text) < 100:
-        return {"summary": text, "method": "passthrough"}
-
-    # Sentence tokenize
-    sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', text) if len(s.strip()) > 30]
-    if len(sentences) <= 3:
-        return {"summary": " ".join(sentences), "method": "short"}
-
-    # Word frequency (stop-word filtered)
-    stop = {"the","a","an","and","or","but","in","on","at","to","for","of","with","is","was","are",
-            "were","be","been","have","has","had","it","its","this","that","from","by","as","at"}
-    words = [w.lower() for w in re.findall(r'\b[a-z]+\b', text.lower()) if w not in stop and len(w) > 2]
-    freq = Counter(words)
-
-    scored = []
-    for i, sent in enumerate(sentences):
-        sw = [w.lower() for w in re.findall(r'\b[a-z]+\b', sent.lower()) if w not in stop]
-        score = sum(freq.get(w, 0) for w in sw) / max(len(sw), 1)
-        # Boost leading sentences
-        if i == 0:
-            score *= 2.0
-        elif i <= 2:
-            score *= 1.4
-        scored.append((score, i, sent))
-
-    top = sorted(scored, reverse=True)[:3]
-    top_ordered = sorted(top, key=lambda x: x[1])  # preserve original order
-    summary = " ".join(s for _, _, s in top_ordered)
-
-    return {"summary": summary, "sentences": len(sentences), "method": "extractive"}
-
-
-@app.get("/api/sentiment/history/{ticker}")
-def get_sentiment_history(ticker: str, days: int = 90):
-    """
-    Return per-week average signal score and return for a ticker,
-    mined from correlation_data.json (our training dataset).
-    """
-    import json, pathlib
-    from datetime import datetime, timedelta
-    from collections import defaultdict
-
-    ticker = ticker.upper()
-    corr_path = pathlib.Path(__file__).parent / "correlation_data.json"
-    try:
-        with open(corr_path) as f:
-            events = json.load(f).get("events", [])
-    except Exception:
-        return {"ticker": ticker, "history": []}
-
-    cutoff = datetime.now() - timedelta(days=days)
-    ticker_events = []
-    for e in events:
-        if e.get("ticker") != ticker:
-            continue
-        try:
-            ed = datetime.fromisoformat(str(e.get("event_date", ""))[:10])
-        except Exception:
-            continue
-        if ed < cutoff:
-            continue
-        ticker_events.append((ed, e))
-
-    if not ticker_events:
-        return {"ticker": ticker, "history": [], "message": "No events in range"}
-
-    # Bucket by week
-    week_buckets = defaultdict(list)
-    for ed, e in ticker_events:
-        week_key = ed.strftime("%Y-W%W")
-        week_buckets[week_key].append(e)
-
-    history = []
-    for week, evts in sorted(week_buckets.items()):
-        signals = [e.get("signal", 0) for e in evts if e.get("signal") is not None]
-        returns_7d = [e.get("return_7d") for e in evts if e.get("return_7d") is not None]
-        returns_1d = [e.get("return_1d") for e in evts if e.get("return_1d") is not None]
-        history.append({
-            "week": week,
-            "event_count": len(evts),
-            "avg_signal": round(sum(signals) / len(signals), 2) if signals else 0,
-            "avg_return_7d": round(sum(returns_7d) / len(returns_7d), 2) if returns_7d else None,
-            "avg_return_1d": round(sum(returns_1d) / len(returns_1d), 2) if returns_1d else None,
-            "event_types": list(set(e.get("event_type", "unknown") for e in evts)),
-        })
-
-    return {"ticker": ticker, "history": history, "total_events": len(ticker_events), "weeks": len(history)}
-
-
-@app.get("/api/geopolitical/risk")
-def get_geopolitical_risk(days: int = 7):
-    """
-    Return regional geopolitical risk scores by searching GDELT for risk keywords per region.
-    """
-    REGIONS = [
-        {"name": "Middle East",   "keywords": ["Israel Gaza Lebanon Iran Syria Yemen Iraq", "middle east conflict"]},
-        {"name": "Eastern Europe","keywords": ["Ukraine Russia NATO war sanctions", "eastern europe"]},
-        {"name": "East Asia",     "keywords": ["China Taiwan North Korea South China Sea", "east asia tension"]},
-        {"name": "South Asia",    "keywords": ["India Pakistan Kashmir Afghanistan", "south asia crisis"]},
-        {"name": "Africa",        "keywords": ["Sudan Somalia coup civil war Africa", "africa conflict"]},
-        {"name": "Latin America", "keywords": ["Venezuela Colombia Mexico cartel narco", "latin america"]},
-        {"name": "United States", "keywords": ["US tariffs sanctions trade war foreign policy", "america geopolitical"]},
-        {"name": "Europe",        "keywords": ["EU Brexit sanctions trade dispute Europe", "europe diplomatic"]},
-    ]
-
-    region_scores = []
-    for region in REGIONS:
-        try:
-            results = gdelt_service.search_news(query=region["keywords"][0], timespan=days, max_results=20)
-            article_count = len(results) if results else 0
-            # Risk score = normalized article count (more crisis news = higher risk)
-            raw_score = min(100, article_count * 5)
-            region_scores.append({
-                "region": region["name"],
-                "risk_score": raw_score,
-                "risk_level": "HIGH" if raw_score >= 60 else "MEDIUM" if raw_score >= 30 else "LOW",
-                "article_count": article_count,
-                "sample_headlines": [r.get("title", "") for r in (results or [])[:3]],
-            })
-        except Exception:
-            region_scores.append({"region": region["name"], "risk_score": 0, "risk_level": "LOW", "article_count": 0, "sample_headlines": []})
-
-    region_scores.sort(key=lambda x: x["risk_score"], reverse=True)
-    return {"regions": region_scores, "as_of": datetime.now().isoformat(), "days_analyzed": days}
-
-
-@app.get("/api/predict/explain/{ticker}")
-def explain_stock_movement(ticker: str, limit: int = 10):
-    """
-    Return the top government events that historically correlated with price moves for a ticker.
-    Powers the 'Why did this move?' explainer modal.
-    """
-    import json, pathlib
-    from datetime import datetime
-
-    ticker = ticker.upper()
-    corr_path = pathlib.Path(__file__).parent / "correlation_data.json"
-    try:
-        with open(corr_path) as f:
-            events = json.load(f).get("events", [])
-    except Exception:
-        return {"ticker": ticker, "events": []}
-
-    ticker_events = [e for e in events if e.get("ticker") == ticker]
-
-    if not ticker_events:
-        return {"ticker": ticker, "events": [], "message": "No historical events found"}
-
-    # Score events by absolute 7-day return impact
-    scored = []
-    for e in ticker_events:
-        r7 = e.get("return_7d")
-        r1 = e.get("return_1d")
-        try:
-            r7 = float(r7) if r7 is not None else None
-            r1 = float(r1) if r1 is not None else None
-        except (TypeError, ValueError):
-            continue
-        if r7 is None and r1 is None:
-            continue
-        impact = abs(r7 if r7 is not None else r1)
-        scored.append((impact, len(scored), e))
-
-    scored.sort(key=lambda x: x[0], reverse=True)
-    top_events = []
-    for impact, _idx, e in scored[:limit]:
-        r7 = e.get("return_7d")
-        top_events.append({
-            "event_type": e.get("event_type", "unknown"),
-            "event_title": e.get("event_title") or e.get("description") or e.get("event_type", "Government Event"),
-            "event_date": e.get("event_date", ""),
-            "source": e.get("source", ""),
-            "return_1d": e.get("return_1d"),
-            "return_7d": r7,
-            "return_30d": e.get("return_30d"),
-            "direction": "UP" if (r7 or 0) > 0 else "DOWN",
-            "signal": e.get("signal", {}).get("signal_score", 50) if isinstance(e.get("signal"), dict) else (e.get("signal") or 0),
-            "award_amount": e.get("Award Amount") or e.get("award_amount"),
-        })
-
-    # Summary stats
-    up_events = [ev for ev in top_events if ev["direction"] == "UP"]
-    return {
-        "ticker": ticker,
-        "events": top_events,
-        "total_events": len(ticker_events),
-        "bullish_pct": round(len(up_events) / len(top_events) * 100) if top_events else 50,
-        "avg_7d_return": round(sum(abs(ev.get("return_7d") or 0) for ev in top_events) / len(top_events), 2) if top_events else 0,
-    }

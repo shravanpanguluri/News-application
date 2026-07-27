@@ -1,0 +1,201 @@
+.article-reader-modal .article-content {
+  padding: 10px;
+}
+
+/* =============================================
+   HERO IMAGE
+   ============================================= */
+.article-hero-image {
+  max-height: 400px !important;
+  width: 100% !important;
+  object-fit: cover !important;
+  border-radius: 8px !important;
+  margin-bottom: 20px !important;
+}
+
+/* =============================================
+   ARTICLE TITLE
+   ============================================= */
+.article-title {
+  font-size: 2rem !important;
+  line-height: 1.3 !important;
+  margin-bottom: 15px !important;
+}
+
+/* =============================================
+   ARTICLE META
+   ============================================= */
+.article-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.article-meta span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.article-source,
+.article-author {
+  color: #2185d0 !important;
+  font-weight: 500;
+}
+
+/* =============================================
+   ARTICLE BODY
+   ============================================= */
+.article-summary {
+  background: var(--bg-secondary) !important;
+  border-left: 4px solid #f1c40f !important;
+  margin: 20px 0 !important;
+}
+
+.article-summary p {
+  line-height: 1.8 !important;
+  font-size: 15px !important;
+}
+
+.article-full-content {
+  margin: 20px 0;
+}
+
+.article-text {
+  line-height: 1.8;
+  font-size: 16px;
+  color: var(--text-color);
+}
+
+.article-text p {
+  margin-bottom: 15px;
+}
+
+.article-actions {
+  margin-top: 30px !important;
+  background: var(--bg-secondary) !important;
+}
+
+/* Fallback styles */
+.article-fallback {
+  padding: 10px;
+}
+
+/* Loading state */
+.article-reader-modal .dimmer {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* Intel reader modal */
+.intel-reader-modal .ui.grid {
+  margin: 0 !important;
+}
+
+/* =============================================
+   MOBILE (≤ 480px)
+   ============================================= */
+@media (max-width: 480px) {
+  .article-title {
+    font-size: 1.3rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .article-hero-image {
+    max-height: 200px !important;
+    border-radius: 6px !important;
+  }
+
+  .article-meta {
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+  }
+
+  .article-text {
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .article-summary p {
+    font-size: 13px !important;
+  }
+
+  /* Full-screen modal on small phones */
+  .ui.large.modal {
+    width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    height: 100vh !important;
+  }
+
+  .ui.large.modal .scrolling.content {
+    max-height: calc(100vh - 120px) !important;
+  }
+
+  /* Intel report title */
+  .intel-reader-modal .ui.header {
+    font-size: 1.2rem !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+  }
+
+  .reconstructed-content p {
+    font-size: 0.95rem !important;
+  }
+}
+
+/* =============================================
+   TABLET (481px – 1024px)
+   ============================================= */
+@media (min-width: 481px) and (max-width: 1024px) {
+  .article-title {
+    font-size: 1.6rem !important;
+  }
+
+  .article-hero-image {
+    max-height: 300px !important;
+  }
+
+  .article-meta {
+    gap: 10px;
+  }
+
+  .article-text {
+    font-size: 15px;
+  }
+}
+
+/* =============================================
+   PROJECTOR (≥ 1441px)
+   ============================================= */
+@media (min-width: 1441px) {
+  .article-title {
+    font-size: 2.4rem !important;
+  }
+
+  .article-hero-image {
+    max-height: 500px !important;
+  }
+
+  .article-text {
+    font-size: 18px;
+    line-height: 1.9;
+  }
+
+  .article-summary p {
+    font-size: 17px !important;
+  }
+
+  .article-meta {
+    font-size: 16px;
+  }
+}

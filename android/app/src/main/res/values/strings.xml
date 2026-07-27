@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Predovex News Intelligence</string>
+    <string name="title_activity_main">Predovex News Intelligence</string>
+    <string name="package_name">com.predovex.newsintelligence</string>
+    <string name="custom_url_scheme">com.predovex.newsintelligence</string>
+</resources>

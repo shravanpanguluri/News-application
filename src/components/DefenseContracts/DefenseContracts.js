@@ -27,11 +27,10 @@ const DefenseContracts = () => {
             // Fetch contracts for top defense contractors
             const contractPromises = DEFENSE_CONTRACTORS.slice(0, 5).map(async (contractor) => {
                 try {
-                    const response = await fetch(`${BACKEND_URL}/api/contracts/ticker/${contractor.ticker}?company_name=${encodeURIComponent(contractor.name)}&limit=50`);
+                    const response = await fetch(`${BACKEND_URL}/api/contracts/ticker/${contractor.ticker}?company_name=${encodeURIComponent(contractor.name)}&limit=10`);
                     if (response.ok) {
                         const data = await response.json();
-                        const contractList = Array.isArray(data) ? data : (data.contracts || []);
-                        return { contractor: contractor.name, ticker: contractor.ticker, contracts: contractList };
+                        return { contractor: contractor.name, ticker: contractor.ticker, contracts: data };
                     }
                 } catch (err) {
                     console.error(`Error fetching ${contractor.ticker}:`, err);
@@ -60,7 +59,7 @@ const DefenseContracts = () => {
             // Calculate summary
             const totalValue = allContracts.reduce((sum, c) => sum + (c['Award Amount'] || c.amount || 0), 0);
             const summary = {
-                contracts: allContracts.slice(0, 250),
+                contracts: allContracts.slice(0, 30),
                 contract_count: allContracts.length,
                 total_value: totalValue,
                 avg_value: allContracts.length > 0 ? totalValue / allContracts.length : 0,
@@ -173,7 +172,7 @@ const DefenseContracts = () => {
             ) : contracts?.contracts && contracts.contracts.length > 0 ? (
                 <>
                     {/* Summary Cards */}
-                    <Card.Group stackable itemsPerRow={4} style={{ marginBottom: '20px' }}>
+                    <Card.Group itemsPerRow={4} style={{ marginBottom: '20px' }}>
                         <Card>
                             <Card.Content>
                                 <Statistic>
@@ -259,7 +258,6 @@ const DefenseContracts = () => {
                     )}
 
                     {/* Contracts Table */}
-                    <div className="defense-table-scroll">
                     <Table compact selectable striped>
                         <Table.Header>
                             <Table.Row>
@@ -301,7 +299,6 @@ const DefenseContracts = () => {
                             ))}
                         </Table.Body>
                     </Table>
-                    </div>
 
                     <div style={{ marginTop: '15px', textAlign: 'right' }}>
                         <Button onClick={fetchDefenseContracts} size="small" icon="refresh" content="Refresh" />

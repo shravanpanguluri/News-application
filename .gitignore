@@ -1,0 +1,27 @@
+node_modules/
+build/
+.DS_Store
+.env
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# Python environments and caches
+backend/venv/
+backend/venv.dataless/
+backend/__pycache__/
+backend/**/*.pyc
+
+# Generated collection output
+backend/backtest_results/
+backend/tracking_data/
+backend/collection_stats.json
+backend/massive_collection_results.json
+backend/nightly_backfill.log
+
+# Native build output
+android/**/build/
+android/.gradle/
+ios/App/Pods/
+ios/App/build/

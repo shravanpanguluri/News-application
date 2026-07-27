@@ -1,145 +1,160 @@
-import React, { useEffect, useState } from 'react';
-import { Header, Icon, Loader, Message, Segment, Statistic, Table } from 'semantic-ui-react';
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Legend,
-  Line,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
+import React, { useState, useEffect } from 'react';
+import { Segment, Header, Grid, Statistic, Loader, Message, Icon } from 'semantic-ui-react';
+import { 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  AreaChart, Area, BarChart, Bar
 } from 'recharts';
+import axios from 'axios';
 import { BACKEND_URL } from '../../API/governmentApi';
 
-const formatDate = value => {
-  const date = new Date(value + 'T00:00:00');
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-};
-
-const ImpactTrends = () => {
-  const [data, setData] = useState(null);
+const ImpactTrends = ({ articles = [] }) => {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    let cancelled = false;
-
-    const loadTrends = async () => {
+    const fetchData = async () => {
       try {
-        setLoading(true);
-        setError('');
-        const response = await fetch(`${BACKEND_URL}/api/analytics/trends?days=30`);
-        if (!response.ok) {
-          throw new Error(`Trend endpoint returned ${response.status}`);
-        }
-        const payload = await response.json();
-        if (!cancelled) setData(payload);
+        const response = await axios.get(BACKEND_URL + '/api/analytics/trends');
+        setData(response.data);
       } catch (err) {
-        if (!cancelled) setError(err.message || 'Unable to load impact trends');
+        console.error('Failed to fetch analytics:', err);
+        setError('Could not load intelligence trends. Ensure the backend is running.');
       } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       }
     };
 
-    loadTrends();
-    return () => {
-      cancelled = true;
-    };
+    fetchData();
   }, []);
 
-  if (loading) {
-    return (
-      <Segment basic>
-        <Loader active inline="centered" content="Loading impact trends" />
-      </Segment>
-    );
-  }
-
-  if (error) {
-    return (
-      <Message warning>
-        <Message.Header>Impact Trends Unavailable</Message.Header>
-        <p>{error}</p>
-      </Message>
-    );
-  }
-
-  const trends = data?.trends || [];
-  const summary = data?.summary || {};
-  const categories = data?.category_breakdown || [];
+  if (loading) return <Loader active inline="centered" size="large">Analyzing intelligence trends...</Loader>;
+  if (error) return <Message error icon="warning" header="Intelligence Error" content={error} />;
+  // Keep the intelligence view useful even when analytics storage is empty by
+  // deriving the same metrics from the articles already loaded in the app.
+  const fallbackCountries = Array.from(new Set(articles.map(a => a.country).filter(Boolean)));
+  const fallbackDates = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (6 - index));
+    return date.toISOString().slice(0, 10);
+  });
+  const fallbackChart = fallbackDates.map(date => {
+    const dayArticles = articles.filter(article => String(article.publishedAt || article.published_at || '').slice(0, 10) === date);
+    return { date, ...(fallbackCountries.length ? fallbackCountries.reduce((acc, country) => ({ ...acc, [country]: dayArticles.filter(a => a.country === country).length }), {}) : { Intelligence: dayArticles.length }) };
+  });
+  const fallbackImpact = fallbackDates.map(date => {
+    const dayArticles = articles.filter(article => String(article.publishedAt || article.published_at || '').slice(0, 10) === date);
+    const score = dayArticles.length ? dayArticles.reduce((sum, article) => sum + (Number(article.impact_score || article.impactScore || 50)), 0) / dayArticles.length : 0;
+    return { date, Intelligence: Math.round(score) };
+  });
+  const resolvedData = data && data.chart_data && data.chart_data.length > 0 ? data : {
+    summary: { total_articles: articles.length, avg_impact: articles.length ? articles.reduce((sum, article) => sum + Number(article.impact_score || article.impactScore || 50), 0) / articles.length : 0, countries: fallbackCountries },
+    chart_data: fallbackChart,
+    impact_chart_data: fallbackImpact,
+  };
+  const countries = resolvedData.summary.countries || [];
+  const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#0088fe'];
 
   return (
-    <div className="gp-analysis-wrap impact-trends">
-      <Header as="h2">
-        <Icon name="chart line" />
+    <div style={{ padding: '20px' }}>
+      <Header as="h2" dividing>
+        <Icon name="dashboard" />
         <Header.Content>
-          Impact Trends
-          <Header.Subheader>30-day intelligence impact and article volume</Header.Subheader>
+          Intelligence Dashboard
+          <Header.Subheader>Impact trends and geopolitical activity monitoring</Header.Subheader>
         </Header.Content>
       </Header>
 
-      <Statistic.Group widths="four" size="small">
-        <Statistic>
-          <Statistic.Value>{summary.total_articles || 0}</Statistic.Value>
-          <Statistic.Label>Total Signals</Statistic.Label>
-        </Statistic>
-        <Statistic color="red">
-          <Statistic.Value>{summary.high_impact_total || 0}</Statistic.Value>
-          <Statistic.Label>High Impact</Statistic.Label>
-        </Statistic>
-        <Statistic color="blue">
-          <Statistic.Value>{summary.current_avg_impact || 0}</Statistic.Value>
-          <Statistic.Label>Avg Impact</Statistic.Label>
-        </Statistic>
-        <Statistic color={summary.direction === 'rising' ? 'green' : summary.direction === 'falling' ? 'orange' : 'grey'}>
-          <Statistic.Value>{summary.avg_impact_delta_7d > 0 ? '+' : ''}{summary.avg_impact_delta_7d || 0}</Statistic.Value>
-          <Statistic.Label>7D Change</Statistic.Label>
-        </Statistic>
-      </Statistic.Group>
+      <Grid stackable columns={3} style={{ marginBottom: '20px' }}>
+        <Grid.Column>
+          <Segment textAlign="center" color="blue">
+            <Statistic size="tiny">
+          <Statistic.Value>{resolvedData.summary.total_articles}</Statistic.Value>
+              <Statistic.Label>Intelligence Assets</Statistic.Label>
+            </Statistic>
+          </Segment>
+        </Grid.Column>
+        <Grid.Column>
+          <Segment textAlign="center" color="green">
+            <Statistic size="tiny">
+              <Statistic.Value>{Number(resolvedData.summary.avg_impact || 0).toFixed(1)}</Statistic.Value>
+              <Statistic.Label>Avg. Impact Score</Statistic.Label>
+            </Statistic>
+          </Segment>
+        </Grid.Column>
+        <Grid.Column>
+          <Segment textAlign="center" color="orange">
+            <Statistic size="tiny">
+              <Statistic.Value>{countries.length}</Statistic.Value>
+              <Statistic.Label>Active Regions</Statistic.Label>
+            </Statistic>
+          </Segment>
+        </Grid.Column>
+      </Grid>
 
-      <Segment className="impact-trends-chart">
-        <ResponsiveContainer width="100%" height={320}>
-          <AreaChart data={trends} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" tickFormatter={formatDate} minTickGap={18} />
-            <YAxis yAxisId="left" />
-            <YAxis yAxisId="right" orientation="right" />
-            <Tooltip labelFormatter={formatDate} />
-            <Legend />
-            <Area yAxisId="left" type="monotone" dataKey="article_count" name="Article Volume" fill="#4a7fa5" stroke="#4a7fa5" fillOpacity={0.18} />
-            <Line yAxisId="right" type="monotone" dataKey="avg_impact" name="Average Impact" stroke="#c8553d" strokeWidth={2} dot={false} />
-            <Line yAxisId="right" type="monotone" dataKey="high" name="High Impact Signals" stroke="#b84030" strokeWidth={2} dot={false} />
-          </AreaChart>
-        </ResponsiveContainer>
-      </Segment>
+      <Grid stackable columns={2}>
+        <Grid.Column width={10}>
+          <Segment>
+            <Header as="h3">Geopolitical Activity Volume</Header>
+            <p className="text-muted">Daily volume of government and policy updates by country</p>
+            <div style={{ width: '100%', height: 400 }}>
+              <ResponsiveContainer>
+                <AreaChart data={resolvedData.chart_data}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  {countries.map((country, index) => (
+                    <Area 
+                      key={country}
+                      type="monotone" 
+                      dataKey={country} 
+                      stackId="1"
+                      stroke={colors[index % colors.length]} 
+                      fill={colors[index % colors.length]} 
+                    />
+                  ))}
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </Segment>
+        </Grid.Column>
 
-      <Table celled compact="very" className="impact-trends-table">
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell>Category</Table.HeaderCell>
-            <Table.HeaderCell textAlign="right">Signals</Table.HeaderCell>
-            <Table.HeaderCell textAlign="right">High Impact</Table.HeaderCell>
-            <Table.HeaderCell textAlign="right">Avg Impact</Table.HeaderCell>
-            <Table.HeaderCell>Trend</Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {categories.map(item => (
-            <Table.Row key={item.category}>
-              <Table.Cell style={{ textTransform: 'capitalize' }}>{item.category}</Table.Cell>
-              <Table.Cell textAlign="right">{item.total}</Table.Cell>
-              <Table.Cell textAlign="right">{item.high_impact}</Table.Cell>
-              <Table.Cell textAlign="right">{item.avg_impact}</Table.Cell>
-              <Table.Cell>
-                <Icon name={item.trend === 'up' ? 'arrow up' : 'minus'} color={item.trend === 'up' ? 'green' : 'grey'} />
-                {item.trend}
-              </Table.Cell>
-            </Table.Row>
-          ))}
-        </Table.Body>
-      </Table>
+        <Grid.Column width={6}>
+          <Segment>
+            <Header as="h3">Policy Impact Scores</Header>
+            <p className="text-muted">Average impact level of recent government actions</p>
+            <div style={{ width: '100%', height: 400 }}>
+              <ResponsiveContainer>
+                <BarChart data={resolvedData.impact_chart_data}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip />
+                  <Legend />
+                  {countries.map((country, index) => (
+                    <Bar 
+                      key={country}
+                      dataKey={country} 
+                      fill={colors[index % colors.length]} 
+                    />
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Segment>
+        </Grid.Column>
+      </Grid>
+      
+      <Message info icon>
+        <Icon name="info circle" />
+        <Message.Content>
+          <Message.Header>Geopolitical Insight</Message.Header>
+          Currently monitoring intelligence from: <strong>{countries.join(', ')}</strong>.
+          The impact score is calculated based on market sensitivity and historical policy significance.
+        </Message.Content>
+      </Message>
     </div>
   );
 };

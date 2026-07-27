@@ -1,0 +1,145 @@
+/* Banner Ad */
+.ad-banner {
+  background: #f8f9fa !important;
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 4px !important;
+  margin: 20px 0 !important;
+  position: relative;
+  padding: 10px !important;
+}
+
+.ad-label {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  font-size: 10px;
+  color: #999;
+  background: rgba(255,255,255,0.9);
+  padding: 2px 6px;
+  border-radius: 3px;
+  z-index: 10;
+}
+
+.ad-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 90px;
+}
+
+.ad-placeholder {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  width: 100%;
+  max-width: 728px;
+  min-height: 90px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.ad-note {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-top: 5px;
+}
+
+.ad-close {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  min-width: auto !important;
+  padding: 8px !important;
+}
+
+/* Native Ad */
+.ad-native {
+  background: #fff !important;
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 8px !important;
+  margin: 15px 0 !important;
+  padding: 15px !important;
+}
+
+.ad-native-content {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ad-native-placeholder {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  width: 100%;
+}
+
+/* Interstitial Ad */
+.ad-interstitial-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.ad-interstitial {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 90%;
+  max-height: 90%;
+  position: relative;
+  text-align: center;
+}
+
+.ad-interstitial-placeholder {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+  padding: 40px;
+  border-radius: 12px;
+  margin: 20px 0;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.ad-close-interstitial {
+  margin-top: 20px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .ad-banner {
+    margin: 10px 0 !important;
+  }
+  
+  .ad-placeholder {
+    min-height: 50px;
+    max-width: 100%;
+  }
+  
+  .ad-interstitial {
+    padding: 20px;
+    max-width: 95%;
+  }
+  
+  .ad-interstitial-placeholder {
+    padding: 30px 20px;
+    min-height: 200px;
+  }
+}

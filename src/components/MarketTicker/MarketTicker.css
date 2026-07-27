@@ -1,0 +1,161 @@
+.market-ticker-container {
+    background: #001a47;
+    color: #c8dff0;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 12.5px;
+    border-bottom: 1px solid rgba(0,163,224,0.2);
+    z-index: 1000;
+    width: 100%;
+    position: relative;
+}
+
+.market-ticker-container::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,163,224,0.5), rgba(0,89,179,0.4), transparent);
+}
+
+.market-ticker-label {
+    background: #003591;
+    color: white;
+    padding: 0 18px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    font-weight: 800;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    z-index: 2;
+    flex-shrink: 0;
+    border-right: 1px solid rgba(0,163,224,0.25);
+    position: relative;
+}
+
+.market-ticker-scroll {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+/* Fade edges */
+.market-ticker-scroll::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0; width: 30px;
+    background: linear-gradient(to right, #001a47, transparent);
+    z-index: 2;
+    pointer-events: none;
+}
+.market-ticker-scroll::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0; bottom: 0; width: 40px;
+    background: linear-gradient(to left, #001a47, transparent);
+    z-index: 2;
+    pointer-events: none;
+}
+
+.ticker-content {
+    display: flex;
+    white-space: nowrap;
+    animation: ticker-animation 300s linear infinite;
+    padding-left: 100%;
+}
+.ticker-content:hover {
+    animation-play-state: paused;
+}
+
+.ticker-item {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 36px;
+    flex-shrink: 0;
+    gap: 0;
+}
+
+.ticker-symbol {
+    font-weight: 700;
+    color: #7a93aa;
+    margin-right: 7px;
+    font-size: 11px;
+    letter-spacing: 0.3px;
+}
+
+.ticker-price {
+    font-weight: 600;
+    margin-right: 6px;
+    color: #c8dff0;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+}
+
+.ticker-change {
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-variant-numeric: tabular-nums;
+}
+
+.ticker-change.up {
+    color: #00b85c;
+    background: rgba(0,184,92,0.12);
+}
+
+.ticker-change.down {
+    color: #e03355;
+    background: rgba(224,51,85,0.12);
+}
+
+.ticker-divider {
+    width: 1px;
+    height: 14px;
+    background: rgba(0,163,224,0.15);
+    margin-right: 36px;
+}
+
+@keyframes ticker-animation {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+}
+
+/* =============================================
+   MOBILE (≤ 480px)
+   ============================================= */
+@media (max-width: 480px) {
+    .market-ticker-container { height: 36px; font-size: 11px; }
+    .market-ticker-label     { font-size: 9px; padding: 0 12px; letter-spacing: 1px; }
+    .ticker-symbol  { margin-right: 5px; font-size: 10px; }
+    .ticker-price   { margin-right: 4px; }
+    .ticker-item    { margin-right: 24px; }
+    .ticker-change  { font-size: 9.5px; padding: 1px 5px; }
+}
+
+/* =============================================
+   TABLET (481px – 1024px)
+   ============================================= */
+@media (min-width: 481px) and (max-width: 1024px) {
+    .market-ticker-container { height: 40px; font-size: 12px; }
+}
+
+/* =============================================
+   PROJECTOR (≥ 1441px)
+   ============================================= */
+@media (min-width: 1441px) {
+    .market-ticker-container { height: 52px; font-size: 14px; }
+    .market-ticker-label     { font-size: 12px; padding: 0 24px; }
+    .ticker-item    { margin-right: 44px; }
+    .ticker-change  { font-size: 12.5px; padding: 3px 8px; }
+    .ticker-symbol  { font-size: 12px; }
+}

@@ -1,0 +1,20 @@
+.gr-widget { border:1px solid var(--gp-rule-2); background:var(--gp-paper); }
+.gr-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 18px; border-bottom:1px solid var(--gp-rule-2); }
+.gr-title { font-family:var(--gp-font-display); font-size:21px; font-style:italic; }
+.gr-controls { display:flex; gap:4px; }
+.gr-day-btn { border:1px solid var(--gp-rule-2); background:transparent; color:var(--gp-ink-mute); padding:4px 9px; font-family:var(--gp-font-mono); font-size:11px; }
+.gr-day-btn--active { background:var(--gp-accent); border-color:var(--gp-accent); color:var(--gp-paper); }
+.gr-empty,.gr-loading { min-height:68px; display:flex; align-items:center; padding:20px 18px; color:var(--gp-ink-mute); font-family:var(--gp-font-mono); font-size:12px; font-style:italic; }
+.gr-list { padding:0 18px; }
+.gr-region-row { border-bottom:1px solid var(--gp-rule); padding:10px 0; }
+.gr-region-main { display:flex; align-items:center; gap:10px; }
+.gr-rank { color:var(--gp-ink-mute); font-family:var(--gp-font-mono); font-size:11px; }
+.gr-region-info { flex:1; min-width:0; }
+.gr-region-name { font-family:var(--gp-font-mono); font-size:12px; text-transform:uppercase; }
+.gr-bar-wrap { background:var(--gp-paper-3); height:4px; margin-top:5px; }
+.gr-bar { background:var(--gp-accent); height:100%; }
+.gr-region-right { display:flex; gap:8px; align-items:center; font-family:var(--gp-font-mono); font-size:10px; }
+.gr-risk-badge { padding:2px 5px; border:1px solid var(--gp-rule-2); }
+.gr-risk-badge--high { color:var(--gp-dn); } .gr-risk-badge--medium { color:var(--gp-accent); } .gr-risk-badge--low { color:var(--gp-up); }
+.gr-score { font-size:14px; } .gr-articles { color:var(--gp-ink-mute); }
+@media (max-width:700px) { .gr-header { align-items:flex-start; flex-direction:column; } .gr-region-right .gr-articles { display:none; } }

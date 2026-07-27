@@ -1,0 +1,74 @@
+.remove-ads-modal .pricing-segment {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+  border-radius: 12px !important;
+  padding: 30px !important;
+  text-align: center;
+}
+
+.pricing-header {
+  margin-bottom: 20px !important;
+}
+
+.pricing-header h2 {
+  margin: 10px 0 0 0 !important;
+  color: white !important;
+}
+
+.pricing-amount {
+  margin: 20px 0 !important;
+}
+
+.currency {
+  font-size: 24px;
+  vertical-align: top;
+}
+
+.amount {
+  font-size: 64px;
+  font-weight: bold;
+}
+
+.period {
+  font-size: 18px;
+  opacity: 0.9;
+}
+
+.pricing-features {
+  text-align: left;
+  margin-top: 30px;
+  background: rgba(255,255,255,0.1);
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 15px;
+}
+
+.feature i {
+  min-width: 20px;
+}
+
+.subscribe-button {
+  min-width: 200px !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .pricing-segment {
+    padding: 20px !important;
+  }
+  
+  .amount {
+    font-size: 48px !important;
+  }
+  
+  .pricing-features {
+    font-size: 13px;
+  }
+}

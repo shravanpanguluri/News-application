@@ -1,19 +1,33 @@
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
+import './govpulse.css';
 // // import API from './API/api'; // DISABLED - NewsAPI CORS  // DISABLED - NewsAPI CORS issues on free plan
-import { articlesAPI, authAPI, rssAPI } from './API/governmentApi';
+import { articlesAPI, authAPI, rssAPI, sentimentAPI } from './API/governmentApi';
 import { transformArticles } from './utils/contentRewriter';
-// Eagerly loaded — required on initial render
+// Lazy load AI utilities - only import when needed for performance
 import NewsCards from './components/NewsCards/NewsCards';
-import MarketTicker from './components/MarketTicker/MarketTicker';
-import BreakingNewsTicker from './components/BreakingNewsTicker/BreakingNewsTicker';
-import ArticleReader from './components/ArticleReader/ArticleReader';
-import TrendingTopics from './components/TrendingTopics/TrendingTopics';
-import CategoryFilter from './components/CategoryFilter/CategoryFilter';
-import AdComponent from './components/AdComponent/AdComponent';
+import GovernmentNewsCard from './components/GovernmentNewsCard/GovernmentNewsCard';
+import SubscriptionPlans from './components/SubscriptionPlans/SubscriptionPlans';
 import LoginModal from './components/LoginModal/LoginModal';
 import RemoveAdsModal from './components/RemoveAdsModal/RemoveAdsModal';
-import PullToRefresh from './components/PullToRefresh/PullToRefresh';
+import BreakingNewsTicker from './components/BreakingNewsTicker/BreakingNewsTicker';
+import TrendingTopics from './components/TrendingTopics/TrendingTopics';
+import AdComponent from './components/AdComponent/AdComponent';
+import CategoryFilter from './components/CategoryFilter/CategoryFilter';
+import BreakingNewsPage from './components/BreakingNewsPage/BreakingNewsPage';
+import ArticleReader from './components/ArticleReader/ArticleReader';
+import NLPAnalysis from './components/NLPAnalysis/NLPAnalysis';
+import TrendingNewsPage from './components/TrendingNewsPage/TrendingNewsPage';
+import PolicyImpactDashboard from './components/PolicyImpactDashboard/PolicyImpactDashboard';
+import MarketTicker from './components/MarketTicker/MarketTicker';
+import GovShorts from './components/GovShorts/GovShorts';
+import EconomicCalendar from './components/EconomicCalendar/EconomicCalendar';
+import StockSentimentDashboard from './components/StockSentimentDashboard/StockSentimentDashboard';
+import DeepAnalysisDashboard from './components/DeepAnalysisDashboard';
+import TradingIntelligenceDashboard from './components/TradingIntelligenceDashboard';
+import PatentEvidenceDashboard from './components/PatentEvidenceDashboard';
+import DefenseContracts from './components/DefenseContracts/DefenseContracts';
+import TrendingPredictions from './components/TrendingPredictions/TrendingPredictions';
 import {
 	Container,
 	Grid,
@@ -32,45 +46,12 @@ import {
 	Accordion,
 	Message,
 } from 'semantic-ui-react';
+import LoaderComponent from './components/Loader/LoaderComponent';
+import SearchComponent from './components/Search/SearchComponent';
+import SearchedResult from './components/SearchedResult/SearchedResult';
+import ImpactTrends from './components/ImpactTrends/ImpactTrends';
+import MarketToolsWidget from './components/MarketToolsWidget/MarketToolsWidget';
 import { useSemanticSearch } from './hooks/useSemanticSearch';
-
-// Lazy loaded — deferred until tab is first visited
-var GovernmentNewsCard = React.lazy(function() { return import('./components/GovernmentNewsCard/GovernmentNewsCard'); });
-var SubscriptionPlans = React.lazy(function() { return import('./components/SubscriptionPlans/SubscriptionPlans'); });
-var BreakingNewsPage = React.lazy(function() { return import('./components/BreakingNewsPage/BreakingNewsPage'); });
-var NLPAnalysis = React.lazy(function() { return import('./components/NLPAnalysis/NLPAnalysis'); });
-var TrendingNewsPage = React.lazy(function() { return import('./components/TrendingNewsPage/TrendingNewsPage'); });
-var PolicyImpactDashboard = React.lazy(function() { return import('./components/PolicyImpactDashboard/PolicyImpactDashboard'); });
-var GovShorts = React.lazy(function() { return import('./components/GovShorts/GovShorts'); });
-var EconomicCalendar = React.lazy(function() { return import('./components/EconomicCalendar/EconomicCalendar'); });
-var StockSentimentDashboard = React.lazy(function() { return import('./components/StockSentimentDashboard/StockSentimentDashboard'); });
-var DeepAnalysisDashboard = React.lazy(function() { return import('./components/DeepAnalysisDashboard'); });
-var PatentEvidenceDashboard = React.lazy(function() { return import('./components/PatentEvidenceDashboard'); });
-var DefenseContracts = React.lazy(function() { return import('./components/DefenseContracts/DefenseContracts'); });
-var TrendingPredictions = React.lazy(function() { return import('./components/TrendingPredictions/TrendingPredictions'); });
-var EarningsCalendarWidget = React.lazy(function() { return import('./components/EarningsCalendarWidget/EarningsCalendarWidget'); });
-var InsiderTrading = React.lazy(function() { return import('./components/InsiderTrading/InsiderTrading'); });
-var SentimentTimeline = React.lazy(function() { return import('./components/SentimentTimeline/SentimentTimeline'); });
-var PortfolioTracker = React.lazy(function() { return import('./components/PortfolioTracker/PortfolioTracker'); });
-var PriceAlerts = React.lazy(function() { return import('./components/PriceAlerts/PriceAlerts'); });
-var GeopoliticalRisk = React.lazy(function() { return import('./components/GeopoliticalRisk/GeopoliticalRisk'); });
-var WatchlistHeatmap = React.lazy(function() { return import('./components/WatchlistHeatmap/WatchlistHeatmap'); });
-var EventExplainer = React.lazy(function() { return import('./components/EventExplainer/EventExplainer'); });
-var SearchComponent = React.lazy(function() { return import('./components/Search/SearchComponent'); });
-var ImpactTrends = React.lazy(function() { return import('./components/ImpactTrends/ImpactTrends'); });
-var MarketToolsWidget = React.lazy(function() { return import('./components/MarketToolsWidget/MarketToolsWidget'); });
-var PrivacyPolicy = React.lazy(function() { return import('./components/LegalScreens/PrivacyPolicy'); });
-
-class TabErrorBoundary extends React.Component {
-	constructor(props) { super(props); this.state = { hasError: false }; }
-	static getDerivedStateFromError() { return { hasError: true }; }
-	render() {
-		if (this.state.hasError) {
-			return <div style={{ padding: '20px', color: '#888', textAlign: 'center' }}>Unable to load this section.</div>;
-		}
-		return this.props.children;
-	}
-}
 
 // Category metadata for heatmap tiles
 const CATEGORY_META = {
@@ -113,16 +94,13 @@ function App() {
 		articlesReadThisSession: 0,
 		showInterstitial: false,
 		mobileMenuOpen: false,
-		bookmarks: (function() { try { return JSON.parse(localStorage.getItem('predovex_bookmarks') || '[]'); } catch(e) { return []; } })(),
+		bookmarks: (function() { try { return JSON.parse(localStorage.getItem('govpulse_bookmarks') || '[]'); } catch(e) { return []; } })(),
 		watchlistKeywords: [],
 		watchlistNews: [],
 		newWatchlistKeyword: '',
 		marketPrices: { crypto: [], stocks: [], forex: [], metals: [], bonds: [], mutual_funds: [], etfs: [], cash: [], real_estate: [] },
 		marketAccordionIndex: -1,
 		isDarkMode: localStorage.getItem('darkMode') === 'true',
-		disclaimerDismissed: localStorage.getItem('predovex_disclaimer') === 'true',
-		showPrivacyPolicy: false,
-		newsLoadError: false,
 		// New: Filtered articles and sorting
 		filteredArticles: [],
 		activeFilter: null,  // 'high-impact', 'positive', 'negative', or category name
@@ -140,6 +118,7 @@ function App() {
 		topicModelLoaded: false,
 		// Sentiment Trends
 		sentimentTrends: {}
+		,sectorSentiment: {}
 	});
 
 	// Initialize Semantic Search
@@ -204,63 +183,6 @@ function App() {
 		</div>
 	);
 
-	const getDefenseNewsArticles = () => {
-		const keywords = [
-			'defense', 'national security', 'military', 'pentagon', 'army', 'navy',
-			'air force', 'space force', 'missile', 'cybersecurity', 'homeland',
-			'nato', 'weapons', 'contract', 'aerospace', 'security'
-		];
-		const merged = []
-			.concat(data.articles || [])
-			.concat(data.breakingNews || [])
-			.concat(data.trendingNews || []);
-		const seen = new Set();
-		const unique = merged.filter(article => {
-			const key = article.url || article.title;
-			if (!key || seen.has(key)) return false;
-			seen.add(key);
-			return true;
-		});
-		const defenseArticles = unique.filter(article => {
-			const text = `${article.title || ''} ${article.description || ''} ${article.content || ''}`.toLowerCase();
-			return keywords.some(keyword => text.includes(keyword));
-		});
-		if (defenseArticles.length > 0) return defenseArticles.slice(0, 50);
-
-		return [
-			{
-				title: 'Pentagon procurement signals continued demand for aerospace, cyber, and readiness programs',
-				description: 'Predovex is tracking federal contract activity across major defense primes, logistics agencies, and national security technology programs.',
-				content: 'Defense and national security procurement remains active across aviation sustainment, missile defense, secure communications, cyber modernization, and logistics support.',
-				source: 'Predovex Defense Desk',
-				category: 'policy',
-				impact_level: 'High',
-				published_at: new Date().toISOString(),
-				url: 'local-defense-brief-1'
-			},
-			{
-				title: 'Defense contractors show broad contract flow across DoD, Navy, Air Force, and logistics agencies',
-				description: 'Local intelligence view highlights award flow for Lockheed Martin, Boeing, Northrop Grumman, General Dynamics, and RTX.',
-				content: 'Contract activity is distributed across platform sustainment, mission systems, logistics, cybersecurity, and advanced weapons programs.',
-				source: 'Predovex Contracts Monitor',
-				category: 'markets',
-				impact_level: 'Medium',
-				published_at: new Date(Date.now() - 3600000).toISOString(),
-				url: 'local-defense-brief-2'
-			},
-			{
-				title: 'National security technology demand remains focused on cyber, space, intelligence, and command systems',
-				description: 'Federal buyers continue to prioritize modernization programs with relevance for software, satellite, and secure network vendors.',
-				content: 'The defense technology pipeline points to continued budget focus on resilient communications, surveillance, space systems, and AI-enabled operations.',
-				source: 'Predovex Security Brief',
-				category: 'technology',
-				impact_level: 'Medium',
-				published_at: new Date(Date.now() - 7200000).toISOString(),
-				url: 'local-defense-brief-3'
-			}
-		];
-	};
-
 	const loadWatchlistNews = async () => {
 		if (!data.isLoggedIn) return;
 		try {
@@ -304,9 +226,18 @@ function App() {
 		loadTrendingTopics();
 		loadWatchlistNews();
 		loadMarketPrices();
+		loadSectorSentiment();
 		getNewsSources();
 		
 		return () => {};
+	}, []);
+
+	// Keep the sector heatmap tied to the backend market-sentiment service.
+	// The endpoint uses the same market snapshot as the ticker and is refreshed
+	// independently of the article feed.
+	useEffect(() => {
+		const interval = setInterval(loadSectorSentiment, 5 * 60 * 1000);
+		return () => clearInterval(interval);
 	}, []);
 
 	// Auto-refresh main news every 30 minutes (resets when category/country changes)
@@ -322,22 +253,15 @@ function App() {
 
 	// Auto-refresh when switching tabs
 	const tabMountedRef = useRef(false);
-	const newsLastLoadedRef = useRef(0);
-	const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 	useEffect(function() {
 		if (!tabMountedRef.current) {
 			tabMountedRef.current = true;
 			return;
 		}
-		var now = Date.now();
-		var stale = now - newsLastLoadedRef.current > CACHE_TTL;
-		if (stale) {
-			newsLastLoadedRef.current = now;
-			loadRSSNews(data.currentCategory, data.currentCountry);
-			loadBreakingNews();
-			loadTrendingNews();
-			loadTrendingTopics();
-		}
+		loadRSSNews(data.currentCategory, data.currentCountry);
+		loadBreakingNews();
+		loadTrendingNews();
+		loadTrendingTopics();
 		if (data.activeTab === 1) loadMarketPrices();
 	}, [data.activeTab]);
 
@@ -369,21 +293,25 @@ function App() {
 			if (articles && articles.length > 0) {
 				const IMPACT_ORDER = { 'High': 0, 'Medium': 1, 'Low': 2 };
 				
-				// Transform all articles to appear as original Predovex content
+				// Transform all articles to appear as original GovPulse content
 				let transformedArticles = transformArticles(articles);
 				
 				// AI Feature: Remove duplicates first (lazy load for performance)
 				if (data.enableDeduplication) {
+					console.log('🔍 AI: Loading duplicate detector...');
 					const { duplicateDetector } = await import('./utils/aiUtils');
 					transformedArticles = await duplicateDetector.detectDuplicates(transformedArticles, 0.92);
+					console.log(`✅ AI: Reduced from ${articles.length} to ${transformedArticles.length} unique articles`);
 				}
 				
 				// AI Feature: Cluster similar articles (lazy load for performance)
 				if (data.enableClustering) {
+					console.log('🔍 AI: Loading news clusterer...');
 					const { newsClusterer } = await import('./utils/aiUtils');
 					const clusters = await newsClusterer.clusterArticles(transformedArticles, 0.85);
 					setData(prev => ({ ...prev, clusteredArticles: clusters }));
 					const stats = newsClusterer.getClusterStats(clusters);
+					console.log(`✅ AI: ${stats.reduction} reduction (${stats.totalArticles} → ${stats.totalClusters} clusters)`);
 				}
 				
 				// Sort by impact level
@@ -397,7 +325,7 @@ function App() {
 					const highValueAds = [
 						{
 							title: "Trade Global Markets with 0% Commission",
-							description: "Join 10M+ investors on eToro. Access stocks, crypto, and ETFs with zero fees. Exclusive for Predovex users.",
+							description: "Join 10M+ investors on eToro. Access stocks, crypto, and ETFs with zero fees. Exclusive for GovPulse users.",
 							url: "https://www.etoro.com/",
 							source: "eToro Global",
 							urlToImage: "https://images.unsplash.com/photo-1611974714025-467f56112705?w=500&q=80",
@@ -433,6 +361,7 @@ function App() {
 				}, 100);  // Defer to not block initial render
 			} else {
 				// Fallback to NewsAPI if RSS returns empty
+				console.log('RSS returned empty, using NewsAPI fallback');
 				const query = category === 'all' ? 'news' : category;
 				// Fallback to RSS - NewsAPI disabled
 				const articles = await rssAPI.getAll(category, 100, country);
@@ -486,7 +415,7 @@ function App() {
 				}));
 			} catch (fallbackError) {
 				console.error('Fallback also failed:', fallbackError);
-				setData(prev => ({ ...prev, isLoading: false, newsLoadError: true }));
+				setData(prev => ({ ...prev, isLoading: false }));
 			}
 		}
 	};
@@ -522,7 +451,12 @@ function App() {
 		}
 	};
 
-	const handleSearchChange = (e, { value }) => {
+	const handleSearchChange = (event, semanticData) => {
+		const value = semanticData && typeof semanticData.value !== 'undefined'
+			? semanticData.value
+			: event && event.target
+				? event.target.value
+				: '';
 		updateData('value', value);
 		setSemanticQuery(value);
 	};
@@ -549,6 +483,7 @@ function App() {
 				// API.get(`everything?q=${data.value}`).then(res =>
 				// 	updateData('result', res.articles)
 				// );
+				console.log('Search disabled - use backend search endpoint');
 			} else {
 				updateData('result', []);
 			}
@@ -575,14 +510,45 @@ function App() {
 		};
 	};
 
+	const loadSectorSentiment = async () => {
+		try {
+			const response = await sentimentAPI.getAllSectorsSentiment();
+			const sectors = response && response.sectors ? response.sectors : response;
+			if (sectors && typeof sectors === 'object' && Object.keys(sectors).length > 0) {
+				setData(prev => ({ ...prev, sectorSentiment: sectors }));
+			}
+		} catch (error) {
+			console.warn('Sector sentiment refresh failed:', error.message || error);
+		}
+	};
+
 	const getSentimentHeatmap = () => {
 		const categories = ['general', 'markets', 'economy', 'technology', 'policy', 'health', 'finance'];
 		const heatmap = {};
 		
 		categories.forEach(cat => {
 			const catArticles = (data.articles || []).filter(a => a.category === cat);
+			const liveSector = {
+				technology: data.sectorSentiment?.Technology || data.sectorSentiment?.technology,
+				health: data.sectorSentiment?.Healthcare || data.sectorSentiment?.healthcare,
+				finance: data.sectorSentiment?.Finance || data.sectorSentiment?.finance,
+				economy: data.sectorSentiment?.Energy || data.sectorSentiment?.energy,
+				policy: data.sectorSentiment?.Defense || data.sectorSentiment?.defense,
+				general: data.sectorSentiment?.Consumer || data.sectorSentiment?.consumer,
+			}[cat];
+			const liveCount = liveSector && Number(liveSector.stocks_analyzed || (liveSector.predictions && liveSector.predictions.length) || 0);
+			if (liveSector && liveCount > 0) {
+				const score = Math.round(Number(liveSector.avg_probability || 0.5) * 100);
+				heatmap[cat] = {
+					score,
+					label: liveSector.sentiment || 'Neutral',
+					color: score > 60 ? 'green' : score < 40 ? 'red' : 'grey',
+					count: liveCount,
+				};
+				return;
+			}
 			if (catArticles.length === 0) {
-				heatmap[cat] = { score: 50, label: 'Neutral', color: 'grey' };
+				heatmap[cat] = { score: 50, label: 'Neutral', color: 'grey', count: 0 };
 				return;
 			}
 			
@@ -649,6 +615,7 @@ function App() {
 			// Get recommendations based on user history
 			const recs = await userPreferenceLearner.getRecommendations(allArticles, 15);
 			setData(prev => ({ ...prev, personalizedArticles: recs }));
+			console.log(`✅ AI: Loaded ${recs.length} personalized recommendations`);
 		} catch (error) {
 			console.error('Failed to load personalized recommendations:', error);
 		}
@@ -659,6 +626,7 @@ function App() {
 		try {
 			const { userPreferenceLearner } = await import('./utils/aiUtils');
 			await userPreferenceLearner.articleRead(article, readDuration);
+			console.log('✅ AI: Tracked reading for personalization');
 			
 			// Reload recommendations with new history
 			if (data.articles.length > 0) {
@@ -674,6 +642,7 @@ function App() {
 		try {
 			const { topicModeler } = await import('./utils/aiUtils');
 			const tagged = await topicModeler.categorizeBatch(articles.slice(0, 50));  // First 50 for performance
+			console.log(`✅ AI: Auto-tagged ${tagged.length} articles with topics`);
 			return tagged;
 		} catch (error) {
 			console.error('Failed to auto-tag articles:', error);
@@ -705,6 +674,7 @@ function App() {
 		// API.get(`everything?q=${topic}`).then(res =>
 		// 	updateData('result', res.articles)
 		// );
+		console.log('Topic search disabled - use backend search');
 	};
 
 	// New: Handle filter click (High Impact, Positive, Negative)
@@ -830,8 +800,6 @@ function App() {
 			return 'Recently';
 		}
 	};
-	var TabFallback = <div style={{ padding: '40px', textAlign: 'center', color: '#888' }}>Loading...</div>;
-
 	const panes = [
 		{
 			menuItem: (
@@ -843,12 +811,10 @@ function App() {
 			render: () => (
 				<Tab.Pane>
 					{!data.hasPremium && <AdComponent type="banner" />}
-					<Suspense fallback={TabFallback}>
-						<GovShorts
-							articles={data.articles}
-							onArticleClick={handleArticleClick}
-						/>
-					</Suspense>
+					<GovShorts
+						articles={data.articles}
+						onArticleClick={handleArticleClick}
+					/>
 					{!data.hasPremium && <AdComponent type="native" />}
 				</Tab.Pane>
 			),
@@ -890,7 +856,7 @@ function App() {
 			),
 			render: () => (
 				<Tab.Pane>
-					<Suspense fallback={TabFallback}><ImpactTrends /></Suspense>
+					<ImpactTrends articles={data.articles} />
 				</Tab.Pane>
 			),
 		},
@@ -903,7 +869,7 @@ function App() {
 			),
 			render: () => (
 				<Tab.Pane>
-					<Suspense fallback={TabFallback}><PolicyImpactDashboard /></Suspense>
+					<PolicyImpactDashboard />
 				</Tab.Pane>
 			),
 		},
@@ -916,9 +882,8 @@ function App() {
 			),
 			render: () => (
 				<Tab.Pane>
-					<Suspense fallback={TabFallback}>
 					<DefenseContracts />
-					</Suspense>
+					
 					{/* Defense News Feed */}
 					<Segment raised style={{ marginTop: '20px' }}>
 						<Header as="h3">
@@ -926,7 +891,9 @@ function App() {
 							Defense & National Security News
 						</Header>
 						<NewsCards
-							articles={getDefenseNewsArticles()}
+							articles={data.articles.filter(a =>
+								['policy', 'general', 'technology'].includes(a.category)
+							).slice(0, 20)}
 							onArticleClick={handleArticleClick}
 						/>
 					</Segment>
@@ -936,13 +903,13 @@ function App() {
 		{
 			menuItem: (
 				<>
-					<Icon name="fire" color="purple" />
+					<Icon name="trending" color="purple" />
 					Trending Predictions
 				</>
 			),
 			render: () => (
 				<Tab.Pane>
-					<Suspense fallback={TabFallback}><TrendingPredictions /></Suspense>
+					<TrendingPredictions />
 				</Tab.Pane>
 			),
 		},
@@ -953,15 +920,11 @@ function App() {
 					Markets
 				</>
 			),
-			render: () => (
+				render: () => (
 				<Tab.Pane>
 					<MarketTicker />
-					<TabErrorBoundary>
-						<Suspense fallback={TabFallback}>
-							<StockSentimentDashboard marketPrices={data.marketPrices} />
-							<DeepAnalysisDashboard />
-						</Suspense>
-					</TabErrorBoundary>
+					<StockSentimentDashboard marketPrices={data.marketPrices} />
+					<DeepAnalysisDashboard />
 
 					{/* Market Intelligence Section */}
 					<Grid stackable columns={2} style={{ marginTop: '20px' }}>
@@ -989,7 +952,7 @@ function App() {
 							
 							{/* Economic Calendar */}
 							<Segment raised>
-								<Suspense fallback={TabFallback}><EconomicCalendar /></Suspense>
+								<EconomicCalendar />
 							</Segment>
 						</Grid.Column>
 
@@ -1020,7 +983,7 @@ function App() {
 			),
 			render: () => (
 				<Tab.Pane>
-					<Suspense fallback={TabFallback}><PatentEvidenceDashboard /></Suspense>
+					<PatentEvidenceDashboard />
 				</Tab.Pane>
 			),
 		},
@@ -1034,13 +997,12 @@ function App() {
 			),
 			render: () => (
 				<Tab.Pane>
-					<PullToRefresh onRefresh={function() { return new Promise(function(resolve) { loadRSSNews(data.currentCategory); setTimeout(resolve, 1500); }); }}>
 					{/* Breaking News Ticker - Only show if user doesn't have premium */}
 					{!data.hasPremium && <BreakingNewsTicker breakingNews={data.breakingNews} />}
-
+					
 					{/* Top Banner Ad - Only show if user doesn't have premium */}
 					{!data.hasPremium && <AdComponent type="banner" />}
-
+					
 					<Grid columns={2} stackable>
 						<Grid.Column width={12}>
 							{data.value && data.value.length >= 3 && (
@@ -1111,23 +1073,6 @@ function App() {
 								</Segment>
 							)}
 
-							{data.newsLoadError && !data.isLoading && data.articles.length === 0 && (
-								<div style={{ textAlign: 'center', padding: '40px 20px' }}>
-									<Icon name="warning circle" size="huge" style={{ color: '#c8553d' }} />
-									<p style={{ fontFamily: 'IBM Plex Sans, sans-serif', marginTop: 12, color: '#3d3a35' }}>
-										Unable to load articles. Check your connection.
-									</p>
-									<Button
-										onClick={function() {
-											setData(function(prev) { return Object.assign({}, prev, { newsLoadError: false }); });
-											loadRSSNews(data.currentCategory);
-										}}
-									>
-										<Icon name="refresh" /> Retry
-									</Button>
-								</div>
-							)}
-
 							<NewsCards
 								articles={data.value && data.value.length >= 3 ? semanticResults :
 								        data.activeFilter && data.filteredArticles.length > 0 ? data.filteredArticles :
@@ -1154,7 +1099,7 @@ function App() {
 									onTopicClick={handleTopicClick}
 								/>
 
-								{!data.hasPremium && <Suspense fallback={<span/>}><MarketToolsWidget /></Suspense>}
+								{!data.hasPremium && <MarketToolsWidget />}
 								
 								{/* Sidebar Ad */}
 								{!data.hasPremium && <AdComponent type="banner" />}
@@ -1180,7 +1125,6 @@ function App() {
 							</div>
 						</Grid.Column>
 					</Grid>
-					</PullToRefresh>
 				</Tab.Pane>
 			),
 		},
@@ -1195,14 +1139,12 @@ function App() {
 				<Tab.Pane>
 					{!data.hasPremium && <AdComponent type="banner" />}
 					{data.breakingNews && data.breakingNews.length > 0 ? (
-						<Suspense fallback={TabFallback}>
-							<BreakingNewsPage
-								breakingNews={data.breakingNews}
-								onRefresh={loadBreakingNews}
-								lastUpdated={data.breakingNewsLastUpdated}
-								onArticleClick={handleArticleClick}
-							/>
-						</Suspense>
+						<BreakingNewsPage 
+							breakingNews={data.breakingNews}
+							onRefresh={loadBreakingNews}
+							lastUpdated={data.breakingNewsLastUpdated}
+							onArticleClick={handleArticleClick}
+						/>
 					) : (
 						<Container textAlign="center" style={{ padding: '50px 0' }}>
 							<Icon name="notched circle" loading size="huge" color="blue" />
@@ -1226,13 +1168,11 @@ function App() {
 			render: () => (
 				<Tab.Pane>
 					{!data.hasPremium && <AdComponent type="banner" />}
-					<Suspense fallback={TabFallback}>
-						<TrendingNewsPage
-							trendingNews={data.trendingNews}
-							onRefresh={loadTrendingNews}
-							onArticleClick={handleArticleClick}
-						/>
-					</Suspense>
+					<TrendingNewsPage
+						trendingNews={data.trendingNews}
+						onRefresh={loadTrendingNews}
+						onArticleClick={handleArticleClick}
+					/>
 					{!data.hasPremium && <AdComponent type="native" />}
 				</Tab.Pane>
 			),
@@ -1264,8 +1204,8 @@ function App() {
 										Manage Your Intelligence
 									</Header>
 									<Form onSubmit={addToWatchlist}>
-										<Input
-											placeholder="Add keyword or ticker (e.g. H1B, AAPL, Bitcoin)..."
+										<Input 
+											placeholder="Add keyword (e.g. H1B, GST, Bitcoin)..." 
 											value={data.newWatchlistKeyword}
 											onChange={(e) => {
 												const val = e.target.value;
@@ -1284,14 +1224,6 @@ function App() {
 									</div>
 								</Segment>
 							</Grid.Column>
-							{/* Price Heatmap */}
-							<Grid.Column width={16}>
-								<Suspense fallback={TabFallback}><WatchlistHeatmap watchlistKeywords={data.watchlistKeywords} /></Suspense>
-							</Grid.Column>
-							{/* Price Alerts */}
-							<Grid.Column width={16}>
-								<Suspense fallback={TabFallback}><PriceAlerts /></Suspense>
-							</Grid.Column>
 							<Grid.Column width={16}>
 								{!data.hasPremium && <AdComponent type="banner" />}
 								<Header as="h2" dividing>
@@ -1299,8 +1231,8 @@ function App() {
 									Your Personalized Feed
 								</Header>
 								{data.watchlistNews.length > 0 ? (
-									<NewsCards
-										articles={data.watchlistNews}
+									<NewsCards 
+										articles={data.watchlistNews} 
 										onArticleClick={handleArticleClick}
 									/>
 								) : (
@@ -1319,12 +1251,10 @@ function App() {
 			menuItem: '💰 Subscription',
 			render: () => (
 				<Tab.Pane>
-					<Suspense fallback={TabFallback}>
-						<SubscriptionPlans
-							currentTier={data.userTier}
-							onUpgrade={handleUpgrade}
-						/>
-					</Suspense>
+					<SubscriptionPlans
+						currentTier={data.userTier}
+						onUpgrade={handleUpgrade}
+					/>
 				</Tab.Pane>
 			),
 		},
@@ -1338,7 +1268,7 @@ function App() {
 			render: () => (
 				<Tab.Pane>
 					{!data.hasPremium && <AdComponent type="banner" />}
-					<Suspense fallback={TabFallback}><NLPAnalysis articles={data.articles} /></Suspense>
+					<NLPAnalysis articles={data.articles} />
 				</Tab.Pane>
 			),
 		},
@@ -1377,59 +1307,16 @@ function App() {
 				</Tab.Pane>
 			),
 		},
-		// ── pane 15: Portfolio Tracker ─────────────────────────────
 		{
 			menuItem: (
 				<>
-					<Icon name="chart pie" color="teal" />
-					Portfolio
+					<Icon name="line chart" color="green" />
+					Trading Intelligence
 				</>
 			),
 			render: () => (
 				<Tab.Pane>
-					<Suspense fallback={TabFallback}><PortfolioTracker /></Suspense>
-				</Tab.Pane>
-			),
-		},
-		// ── pane 16: Trading Intelligence (Earnings + Insider + Sentiment + Explainer + Geo) ──
-		{
-			menuItem: (
-				<>
-					<Icon name="spy" color="purple" />
-					Trading Intel
-				</>
-			),
-			render: () => (
-				<Tab.Pane>
-					<TabErrorBoundary>
-						<Suspense fallback={TabFallback}>
-						<Grid stackable>
-							<Grid.Row>
-								<Grid.Column width={16}>
-									<TabErrorBoundary><EarningsCalendarWidget /></TabErrorBoundary>
-								</Grid.Column>
-							</Grid.Row>
-							<Grid.Row columns={2}>
-								<Grid.Column width={10}>
-									<TabErrorBoundary><SentimentTimeline /></TabErrorBoundary>
-								</Grid.Column>
-								<Grid.Column width={6}>
-									<TabErrorBoundary><GeopoliticalRisk /></TabErrorBoundary>
-								</Grid.Column>
-							</Grid.Row>
-							<Grid.Row>
-								<Grid.Column width={16}>
-									<TabErrorBoundary><EventExplainer /></TabErrorBoundary>
-								</Grid.Column>
-							</Grid.Row>
-							<Grid.Row>
-								<Grid.Column width={16}>
-									<TabErrorBoundary><InsiderTrading /></TabErrorBoundary>
-								</Grid.Column>
-							</Grid.Row>
-						</Grid>
-						</Suspense>
-					</TabErrorBoundary>
+					<TradingIntelligenceDashboard />
 				</Tab.Pane>
 			),
 		},
@@ -1445,13 +1332,9 @@ function App() {
 				</Segment>
 			);
 		}
-		return (
-			<Suspense fallback={TabFallback}>
-				{data.governmentArticles.map((article, index) => (
-					<GovernmentNewsCard key={index} article={article} />
-				))}
-			</Suspense>
-		);
+		return data.governmentArticles.map((article, index) => (
+			<GovernmentNewsCard key={index} article={article} />
+		));
 	};
 
 	const loadGovernmentNews = async () => {
@@ -1484,163 +1367,62 @@ function App() {
 		localStorage.setItem('darkMode', newMode);
 	};
 
-
-	// ── Design system nav groups ──────────────────────────────
-	const NAV_GROUPS = [
-		{ id: 'frontpage', label: 'Front Page', pane: 0 },
-		{ id: 'news', label: 'News', subs: [
-			{ id: 'news-foryou',   label: 'For You',  pane: 1  },
-			{ id: 'news-all',      label: 'All News', pane: 8  },
-			{ id: 'news-breaking', label: 'Breaking', pane: 9  },
-			{ id: 'news-trending', label: 'Trending', pane: 10 },
-		]},
-		{ id: 'intel', label: 'Intelligence', subs: [
-			{ id: 'intel-dash',   label: 'Dashboard',    pane: 2  },
-			{ id: 'intel-policy', label: 'Policy Impact',pane: 3  },
-			{ id: 'intel-pred',   label: 'Predictions',  pane: 5  },
-			{ id: 'intel-pat',    label: 'Patent Intel', pane: 7  },
-			{ id: 'intel-ai',     label: 'AI Analysis',  pane: 13 },
-		]},
-		{ id: 'markets',  label: 'Markets',  pane: 6  },
-		{ id: 'defense',  label: 'Defense',  pane: 4  },
-		{ id: 'account',  label: 'Account',  subs: [
-			{ id: 'acc-watch', label: 'Watchlist',    pane: 11 },
-			{ id: 'acc-saved', label: 'Saved',        pane: 14 },
-			{ id: 'acc-sub',   label: 'Subscription', pane: 12 },
-		]},
-		{ id: 'portfolio',     label: 'Portfolio',     pane: 15 },
-		{ id: 'trading-intel', label: 'Trading Intel', pane: 16 },
-	];
-
-	// Find which group is active
-	let _activeGroup = NAV_GROUPS[0];
-	NAV_GROUPS.forEach(g => {
-		if (!g.subs && g.pane === data.activeTab) _activeGroup = g;
-		if (g.subs) g.subs.forEach(s => { if (s.pane === data.activeTab) _activeGroup = g; });
-	});
-	const activeGroupSubs = _activeGroup.subs || null;
-	const isFrontPage = data.activeTab === 0;
-	const todayLabel = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-
 	return (
-		<div
-			className={'gp-root' + (data.isDarkMode ? ' dark-mode' : '')}
-			data-theme={data.isDarkMode ? 'dark' : 'light'}
-		>
-			{/* ═══════════════════════════════════
-			    PREDOVEX MASTHEAD
-			    3-column: date · big serif title · account
-			    ═══════════════════════════════════ */}
-			<header className="gp-mast">
-				<div className="gp-mast-left">
-					<span>Vol. XIV</span>
-					<span className="gp-mast-sep">·</span>
-					<span>{todayLabel}</span>
-					{data.hasPremium && (
-						<>
-							<span className="gp-mast-sep">·</span>
-							<span style={{ color: 'var(--gp-accent)' }}>PREMIUM</span>
-						</>
-					)}
-				</div>
-
-				<div>
-					<h1 className="gp-mast-title">Pre<em>dovex</em></h1>
-					<div className="gp-mast-sub">Markets · Intelligence · Policy · Defense · Established 2024</div>
-				</div>
-
-				<div className="gp-mast-right">
-					{data.isLoggedIn ? (
-						<button className="gp-acct-chip" onClick={handleLogout} title="Click to logout">
-							<span className="gp-acct-dot"></span>
-							<span className="gp-acct-name">{data.userEmail || 'USER'}</span>
-							<span className="gp-acct-tier">{data.userTier ? data.userTier.toUpperCase() : 'FREE'}</span>
+		<div className={`gp-root ${data.isDarkMode ? 'dark-mode' : ''}`} data-theme={data.isDarkMode ? 'dark' : 'light'}>
+			<Container fluid style={{ minHeight: '100vh', background: 'var(--bg-color)', padding: 0 }}>
+				<header className="gp-mast">
+					<div className="gp-mast-left">
+						<span>VOL. XIV</span><span className="gp-mast-sep">·</span>
+						<span>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span>
+						{data.hasPremium && <><span className="gp-mast-sep">·</span><span style={{ color: 'var(--gp-accent)' }}>PREMIUM</span></>}
+					</div>
+					<div>
+						<h1 className="gp-mast-title">Pre<em>dovex</em></h1>
+						<div className="gp-mast-sub">Markets · Intelligence · Policy · Defense · Established 2024</div>
+					</div>
+					<div className="gp-mast-right">
+						{data.isLoggedIn ? (
+							<button className="gp-acct-chip" onClick={handleLogout} title="Click to logout">
+								<span className="gp-acct-dot" /><span className="gp-acct-name">{data.userTier.toUpperCase()}</span>
+							</button>
+						) : (
+							<button className="gp-acct-btn" onClick={() => setData(prev => ({ ...prev, showLoginModal: true }))}>SIGN IN</button>
+						)}
+						<button className="gp-theme-btn" onClick={toggleDarkMode} title={data.isDarkMode ? 'Light mode' : 'Dark mode'}>
+							{data.isDarkMode ? '☀' : '☾'}
 						</button>
-					) : (
-						<button
-							className="gp-acct-btn"
-							onClick={() => setData(prev => ({ ...prev, showLoginModal: true }))}
-						>
-							Sign In
-						</button>
-					)}
-					<button
-						className="gp-acct-btn"
-						onClick={toggleDarkMode}
-						style={{ padding: '5px 8px', fontSize: '14px' }}
-						title={data.isDarkMode ? 'Light mode' : 'Dark mode'}
-					>
-						{data.isDarkMode ? '☀' : '☾'}
-					</button>
-				</div>
-			</header>
-
-			{/* ── Live market ticker (always visible) ── */}
-			<MarketTicker />
-
-			{/* ═══════════════════════════════════
-			    PRIMARY NAV — grouped sections
-			    ═══════════════════════════════════ */}
-			<nav className="gp-nav" style={{ position: 'sticky', top: 0, zIndex: 200 }}>
-				{NAV_GROUPS.map(group => (
-					<button
-						key={group.id}
-						className={_activeGroup.id === group.id ? 'active' : ''}
-						onClick={() => {
-							const targetPane = group.subs ? group.subs[0].pane : group.pane;
-							setData(prev => ({ ...prev, activeTab: targetPane, mobileMenuOpen: false }));
-						}}
-					>
-						{group.label}
-						{group.subs && <span className="gp-nav-caret">▾</span>}
-					</button>
-				))}
-				<span className="gp-nav-spacer" />
-				<div className="gp-search">
-					<span className="ico">⌕</span>
-					<Suspense fallback={<span/>}>
-						<SearchComponent
-							value={data.value}
-							onSearchChange={handleSearchChange}
-							result={data.result}
-							searchOnEnter={searchOnEnter}
-						/>
-					</Suspense>
-				</div>
-			</nav>
-
-			{/* ── Subnav (shown when active group has children) ── */}
-			{activeGroupSubs && (
-				<nav className="gp-subnav">
-					<span className="gp-subnav-lbl">{_activeGroup.label} /</span>
-					{activeGroupSubs.map(sub => (
-						<button
-							key={sub.id}
-							className={data.activeTab === sub.pane ? 'active' : ''}
-							onClick={() => setData(prev => ({ ...prev, activeTab: sub.pane }))}
-						>
-							{sub.label}
-						</button>
+					</div>
+				</header>
+				<MarketTicker />
+				<nav className="gp-nav reference-nav">
+					{[
+						['FRONT PAGE', 0], ['NEWS', 8], ['INTELLIGENCE', 2], ['MARKETS', 6],
+						['DEFENSE', 4], ['ACCOUNT', 12], ['PORTFOLIO', 11], ['TRADING INTEL', 15]
+					].map(([label, index]) => (
+						<button key={label} className={data.activeTab === index ? 'active' : ''} onClick={() => setData(prev => ({ ...prev, activeTab: index }))}>{label}</button>
 					))}
+					<div className="gp-nav-spacer" />
+					<div className="gp-search">
+						<Icon name="search" className="ico" />
+						<input value={data.value} onChange={handleSearchChange} placeholder="" aria-label="Search" />
+					</div>
 				</nav>
-			)}
 
-			{/* ═══════════════════════════════════
-			    MAIN CONTENT SHELL
-			    ═══════════════════════════════════ */}
-			<div style={{ maxWidth: '1440px', margin: '0 auto', padding: '20px 28px 60px' }}>
+			<Container style={{ marginTop: '20px', marginBottom: '40px' }}>
 
-				{/* ── Intelligence stats + sector heatmap ── */}
-				<div className="intel-dashboard" style={{ marginBottom: '24px' }}>
+				{/* Intelligence Dashboard */}
+				<div className="intel-dashboard">
+
+					{/* ── Row 1: Stats Circles (always horizontal) ─────────────── */}
 					<div className="intel-stats-row">
 						<div
 							className="intel-stat-card intel-stat-card--red"
 							onClick={() => handleFilterClick('high-impact')}
 							style={{ cursor: 'pointer' }}
-							title="View High Impact articles"
+							title="Click to view High Impact articles"
 						>
-							<div className="intel-stat-circle" style={{ borderColor: 'var(--gp-dn, #c8102e)' }}>
-								<span className="intel-stat-value" style={{ color: 'var(--gp-dn, #c8102e)' }}>{stats.highImpact}</span>
+							<div className="intel-stat-circle" style={{ borderColor: '#c8102e' }}>
+								<span className="intel-stat-value" style={{ color: '#c8102e' }}>{stats.highImpact}</span>
 							</div>
 							<span className="intel-stat-label">High Impact</span>
 						</div>
@@ -1648,10 +1430,10 @@ function App() {
 							className="intel-stat-card intel-stat-card--green"
 							onClick={() => handleFilterClick('positive')}
 							style={{ cursor: 'pointer' }}
-							title="View Positive sentiment articles"
+							title="Click to view Positive sentiment articles"
 						>
-							<div className="intel-stat-circle" style={{ borderColor: 'var(--gp-up, #007f3b)' }}>
-								<span className="intel-stat-value" style={{ color: 'var(--gp-up, #007f3b)' }}>{stats.positive}</span>
+							<div className="intel-stat-circle" style={{ borderColor: '#007f3b' }}>
+								<span className="intel-stat-value" style={{ color: '#007f3b' }}>{stats.positive}</span>
 							</div>
 							<span className="intel-stat-label">Positive</span>
 						</div>
@@ -1659,7 +1441,7 @@ function App() {
 							className="intel-stat-card intel-stat-card--blue"
 							onClick={() => handleFilterClick('clear')}
 							style={{ cursor: 'pointer' }}
-							title="View all articles"
+							title="Click to view all articles"
 						>
 							<div className="intel-stat-circle" style={{ borderColor: '#00a3e0' }}>
 								<span className="intel-stat-value" style={{ color: '#00a3e0' }}>{stats.total}</span>
@@ -1668,10 +1450,13 @@ function App() {
 						</div>
 					</div>
 
+					{/* ── Row 3: Sector Sentiment Heatmap (full width) ──────────── */}
 					<div className="heatmap-segment">
 						<div className="heatmap-header">
-							<span className="heatmap-header-title">SECTOR SENTIMENT</span>
-							<span className="heatmap-header-sub">click a tile to filter</span>
+							<span className="heatmap-header-title">
+								<Icon name="th" color="blue" /> SECTOR SENTIMENT
+							</span>
+							<span className="heatmap-header-sub">click a tile to filter news</span>
 						</div>
 						<div className="heatmap-grid">
 							{Object.keys(heatmap).map(cat => {
@@ -1679,11 +1464,13 @@ function App() {
 								const meta = CATEGORY_META[cat] || { emoji: '📰', accent: '#607d8b', label: cat };
 								const noData = !item.count;
 								const isActive = data.currentCategory === cat;
-								const sentClass = noData ? '' : item.score > 60 ? ' up' : item.score < 40 ? ' dn' : '';
+
+										const sentimentLabel = noData ? 'NO DATA' : item.label.toUpperCase();
+
 								return (
 									<button
 										key={cat}
-										className={`heatmap-tile${sentClass}${isActive ? ' active' : ''}${noData ? ' nodata' : ''}`}
+										className={`heatmap-tile ${isActive ? 'active' : ''} ${noData ? 'nodata' : item.score > 60 ? 'up' : item.score < 40 ? 'dn' : ''}`}
 										onClick={() => {
 											setData(prev => ({ ...prev, currentCategory: cat, activeTab: 2 }));
 											loadRSSNews(cat, data.currentCountry);
@@ -1694,110 +1481,133 @@ function App() {
 											<span className="heatmap-tile__n">{item.count || '—'}</span>
 										</div>
 										<div className="heatmap-tile__cat">{meta.label}</div>
-										<div className="heatmap-tile__score">{noData ? '—' : `${item.score}`}<span className="heatmap-tile__unit">/100</span></div>
+										<div className="heatmap-tile__score">
+											{noData ? '—' : item.score}
+											<span className="heatmap-tile__unit">/100</span>
+										</div>
 										<div className="heatmap-tile__sent">
-											{noData ? 'NO DATA' : item.label.toUpperCase()}
+											{sentimentLabel}
 										</div>
 									</button>
 								);
 							})}
 						</div>
 					</div>
+
 				</div>
 
-				{/* ── AI Features row ── */}
-				<div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', padding: '10px 0 16px', borderBottom: '1px solid var(--gp-rule)', marginBottom: '20px' }}>
-					<span style={{ fontFamily: 'var(--gp-font-mono)', fontSize: '10px', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--gp-ink-mute)' }}>AI Features</span>
-					<Button
-						size="small"
-						toggle
-						active={data.enableDeduplication}
-						onClick={() => setData(prev => ({ ...prev, enableDeduplication: !prev.enableDeduplication }))}
-						title="Remove duplicate articles from different sources"
-					>
-						<Icon name="copy outline" /> Dedup
-					</Button>
-					<Button
-						size="small"
-						toggle
-						active={data.enableClustering}
-						onClick={() => setData(prev => ({ ...prev, enableClustering: !prev.enableClustering }))}
-						title="Group similar articles together"
-					>
-						<Icon name="sitemap" /> Cluster
-					</Button>
-					{data.activeTab === 8 && (
-						<div style={{ marginLeft: 'auto' }}>
-							<CategoryFilter
-								value={data.currentCategory}
-								onChange={categoryChange}
+				<Grid className="dashboard-controls" columns={2} stackable mobile={1} style={{ marginBottom: '20px' }}>
+					<Grid.Row>
+						<Grid.Column width={8}>
+							<SearchComponent
+								value={data.value}
+								onSearchChange={handleSearchChange}
+								result={data.result}
+								searchOnEnter={searchOnEnter}
 							/>
-						</div>
-					)}
-					{(data.enableDeduplication || data.enableClustering) && (
-						<Label size="small" color="green" style={{ marginLeft: 'auto' }}>
-							<Icon name="check" /> AI Active
-						</Label>
-					)}
-				</div>
+						</Grid.Column>
+						<Grid.Column width={8}>
+							{data.activeTab === 8 && (
+								<CategoryFilter
+									value={data.currentCategory}
+									onChange={categoryChange}
+								/>
+							)}
+						</Grid.Column>
+					</Grid.Row>
+					
+					{/* AI Features Toggle Row */}
+					<Grid.Row style={{ paddingTop: '10px' }}>
+						<Grid.Column width={16}>
+							<Segment secondary style={{ padding: '10px', background: data.isDarkMode ? 'rgba(255,255,255,0.05)' : '#f8f9fa' }}>
+								<div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+									<Label color="purple" size="small">
+										<Icon name="lightbulb outline" /> AI Features
+									</Label>
+									<Button
+										size="small"
+										toggle
+										active={data.enableDeduplication}
+										onClick={() => setData(prev => ({ ...prev, enableDeduplication: !prev.enableDeduplication }))}
+										title="Remove duplicate articles from different sources"
+									>
+										<Icon name="copy outline" /> Remove Duplicates
+									</Button>
+									<Button
+										size="small"
+										toggle
+										active={data.enableClustering}
+										onClick={() => setData(prev => ({ ...prev, enableClustering: !prev.enableClustering }))}
+										title="Group similar articles together"
+									>
+										<Icon name="sitemap" /> Cluster Articles
+									</Button>
+									{(data.enableDeduplication || data.enableClustering) && (
+										<Label size="small" color="green">
+											<Icon name="check" /> AI Active
+										</Label>
+									)}
+								</div>
+							</Segment>
+						</Grid.Column>
+					</Grid.Row>
+				</Grid>
 
-				{/* ── Active pane content ── */}
-				<div>
-					{panes[data.activeTab].render()}
-				</div>
-			</div>
+				{/* Main Content Tabs */}
+				<Segment style={{ marginTop: '20px', padding: 0, borderTop: '3px solid #003591' }}>
+					{/* Desktop Menu — scrollable when tabs overflow */}
+					<div className="desktop-only tab-nav-scroll">
+						<Menu secondary pointing style={{ flexWrap: 'nowrap' }}>
+							{panes.map((pane, index) => (
+								<Menu.Item
+									key={index}
+									name={index.toString()}
+									active={data.activeTab === index}
+									onClick={() => {
+										setData(prev => ({ ...prev, activeTab: index }));
+									}}
+								>
+									{pane.menuItem}
+								</Menu.Item>
+							))}
+						</Menu>
+					</div>
 
-			{/* ═══════════════════════════════════
-			    FOOTER
-			    ═══════════════════════════════════ */}
-			<footer className="gp-foot">
-				<div>© 2026 Predovex · Intelligence Platform</div>
-				<div className="gp-foot-mid">Signal preserved. Noise filtered.</div>
-				<div className="gp-foot-right">
-					<button
-						onClick={function() { setData(function(prev) { return Object.assign({}, prev, { showPrivacyPolicy: true }); }); }}
-						style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', font: 'inherit', padding: 0 }}
-					>
-						Privacy
-					</button>
-					{' · '}
-					<span>Not investment advice</span>
-				</div>
-			</footer>
+					{/* Mobile/Tablet Menu — hamburger */}
+					<div className="tablet-mobile-only">
+						<Menu secondary pointing style={{ marginBottom: 0 }}>
+							<Menu.Item header>
+								<Icon name="bars" onClick={() => setData(prev => ({ ...prev, mobileMenuOpen: !prev.mobileMenuOpen }))} />
+								{panes[data.activeTab].menuItem}
+							</Menu.Item>
+						</Menu>
+						
+						{data.mobileMenuOpen && (
+							<Menu vertical fluid secondary style={{ borderTop: '1px solid #eee' }}>
+								{panes.map((pane, index) => (
+									<Menu.Item
+										key={index}
+										name={index.toString()}
+										active={data.activeTab === index}
+										onClick={() => {
+											setData(prev => ({ ...prev, activeTab: index, mobileMenuOpen: false }));
+										}}
+									>
+										{pane.menuItem}
+									</Menu.Item>
+								))}
+							</Menu>
+						)}
+					</div>
 
-			{/* Financial disclaimer banner — shown once per device */}
-			{!data.disclaimerDismissed && (
-				<div style={{
-					position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9998,
-					background: '#14110d', color: '#f3ede0',
-					padding: '10px 16px', display: 'flex', alignItems: 'center',
-					gap: '12px', fontSize: '11px', fontFamily: 'IBM Plex Sans, sans-serif',
-					borderTop: '2px solid #c8553d',
-				}}>
-					<Icon name="warning sign" style={{ color: '#c8553d', flexShrink: 0 }} />
-					<span style={{ flex: 1, lineHeight: 1.5 }}>
-						<strong>Not investment advice.</strong> Predovex provides ML predictions and market data for informational and educational purposes only. Past model performance does not guarantee future results. Always consult a qualified financial adviser.
-					</span>
-					<button
-						onClick={function() {
-							localStorage.setItem('predovex_disclaimer', 'true');
-							setData(function(prev) { return Object.assign({}, prev, { disclaimerDismissed: true }); });
-						}}
-						style={{
-							background: '#c8553d', border: 'none', color: '#f3ede0',
-							padding: '6px 14px', cursor: 'pointer', flexShrink: 0,
-							fontFamily: 'IBM Plex Mono, monospace', fontSize: '10px',
-							textTransform: 'uppercase', letterSpacing: '0.08em',
-						}}
-					>
-						Understood
-					</button>
-				</div>
-			)}
+					
+					<div style={{ marginTop: '20px' }}>
+						{panes[data.activeTab].render()}
+					</div>
+				</Segment>
+			</Container>
 
-			{/* ═══════════════════════════════════
-			    MODALS
-			    ═══════════════════════════════════ */}
+			{/* Modals */}
 			<LoginModal
 				open={data.showLoginModal}
 				onClose={() => setData(prev => ({ ...prev, showLoginModal: false }))}
@@ -1811,38 +1621,33 @@ function App() {
 					checkAuth();
 				}}
 			/>
+
 			<RemoveAdsModal
 				open={data.showRemoveAdsModal}
 				onClose={() => setData(prev => ({ ...prev, showRemoveAdsModal: false }))}
 				onSubscribe={handleRemoveAdsSubscribe}
 			/>
+
 			<ArticleReader
 				article={data.selectedArticleForReading}
 				open={data.articleReaderOpen}
 				allArticles={data.articles}
-				onClose={() => setData(prev => ({ ...prev, articleReaderOpen: false, selectedArticleForReading: null }))}
+				onClose={() => setData(prev => ({
+					...prev,
+					articleReaderOpen: false,
+					selectedArticleForReading: null
+				}))}
 			/>
+
 			{data.showInterstitial && (
-				<AdComponent
-					type="interstitial"
-					onClose={() => setData(prev => ({ ...prev, showInterstitial: false }))}
+				<AdComponent 
+					type="interstitial" 
+					onClose={() => setData(prev => ({ ...prev, showInterstitial: false }))} 
 				/>
 			)}
-
-			{/* Privacy Policy full-screen overlay */}
-			{data.showPrivacyPolicy && (
-				<div style={{
-					position: 'fixed', inset: 0, zIndex: 10000,
-					background: 'var(--gp-paper, #f3ede0)',
-					overflowY: 'auto',
-				}}>
-					<Suspense fallback={TabFallback}>
-						<PrivacyPolicy onClose={function() { setData(function(prev) { return Object.assign({}, prev, { showPrivacyPolicy: false }); }); }} />
-					</Suspense>
-				</div>
-			)}
-		</div>
-	);
+			</Container>
+			</div>
+			);
 }
 
 export default App;

@@ -68,31 +68,8 @@ const CATEGORY_TEMPLATES = {
   ],
 };
 
-function cleanDisplayText(value) {
-  if (!value) return '';
-  const entityMap = {
-    '&amp;': '&',
-    '&lt;': '<',
-    '&gt;': '>',
-    '&quot;': '"',
-    '&#39;': "'",
-    '&apos;': "'",
-    '&#8230;': '...',
-    '&hellip;': '...',
-    '&nbsp;': ' ',
-  };
-  return String(value)
-    .replace(/&(amp|lt|gt|quot|apos|nbsp|hellip);|&#39;|&#8230;/g, match => entityMap[match] || match)
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\[\s*(?:\.{3}|…)\s*\]/g, '...')
-    .replace(/&[#a-zA-Z0-9]+;/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
 // Extract key topics from original headline
 function extractTopics(headline) {
-  headline = cleanDisplayText(headline);
   const topics = [];
   
   // Remove common words and extract meaningful terms
@@ -125,8 +102,7 @@ function extractTopics(headline) {
 function rewriteHeadline(originalHeadline, category = 'general') {
   if (!originalHeadline) return "Predovex Intelligence Brief";
   
-  const cleanHeadline = cleanDisplayText(originalHeadline);
-  const topic = extractTopics(cleanHeadline);
+  const topic = extractTopics(originalHeadline);
   const templates = CATEGORY_TEMPLATES[category] || CATEGORY_TEMPLATES.general;
   
   // Select random template
@@ -136,9 +112,9 @@ function rewriteHeadline(originalHeadline, category = 'general') {
   let rewritten = template.replace('{topic}', topic || 'Market Update');
   
   // Add urgency indicators for breaking news
-  if (cleanHeadline.toLowerCase().includes('breaking') || 
-      cleanHeadline.toLowerCase().includes('urgent') ||
-      cleanHeadline.toLowerCase().includes('just in')) {
+  if (originalHeadline.toLowerCase().includes('breaking') || 
+      originalHeadline.toLowerCase().includes('urgent') ||
+      originalHeadline.toLowerCase().includes('just in')) {
     rewritten = "BREAKING: " + rewritten;
   }
   
@@ -163,7 +139,7 @@ function rewriteDescription(originalDescription, headline) {
   const intro = intros[Math.floor(Math.random() * intros.length)];
   
   // Clean up the description
-  let cleaned = cleanDisplayText(originalDescription)
+  let cleaned = originalDescription
     .replace(/according to.*?reports?/gi, 'intelligence indicates')
     .replace(/sources say/gi, 'our analysis shows')
     .replace(/experts believe/gi, 'Predovex analysts assess')
@@ -171,28 +147,6 @@ function rewriteDescription(originalDescription, headline) {
     .replace(/allegedly/gi, 'indicators point to');
   
   return intro + cleaned;
-}
-
-function rewriteInsight(originalSummary, originalDescription, headline, category) {
-  const sourceText = originalSummary || originalDescription || headline || '';
-  const topic = extractTopics(headline || sourceText) || 'this development';
-  const focusByCategory = {
-    general: 'public attention and institutional response',
-    markets: 'market positioning and risk appetite',
-    economy: 'economic expectations and policy sensitivity',
-    technology: 'competitive positioning and adoption risk',
-    policy: 'regulatory direction and government action',
-    health: 'sector risk and public-health policy',
-    finance: 'capital flows and balance-sheet exposure',
-    crypto: 'digital-asset sentiment and regulatory risk',
-    stocks: 'equity sentiment and company-specific momentum',
-    forex: 'currency volatility and macro positioning',
-  };
-  const focus = focusByCategory[category] || 'market and policy impact';
-  const cleaned = cleanDisplayText(sourceText);
-  const shortContext = cleaned.length > 130 ? cleaned.substring(0, 127).replace(/\s+\S*$/, '') + '...' : cleaned;
-
-  return `Predovex flags ${topic} as relevant to ${focus}${shortContext ? `: ${shortContext}` : '.'}`;
 }
 
 // Generate Predovex source attribution
@@ -232,14 +186,9 @@ export function transformArticle(article) {
     // Rewrite headline as original Predovex analysis
     title: rewriteHeadline(article.title, category),
     originalTitle: article.title, // Keep for internal use only
-    originalDescription: cleanDisplayText(article.description),
-    content: cleanDisplayText(article.content),
     
     // Rewrite description with Predovex branding
     description: rewriteDescription(article.description || article.ai_summary, article.title),
-
-    // Keep the key insight distinct from the article body/excerpt
-    ai_summary: rewriteInsight(article.ai_summary, article.description, article.title, category),
     
     // Replace source with Predovex attribution
     source: getPredovexSource(category),

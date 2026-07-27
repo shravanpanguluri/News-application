@@ -1,0 +1,262 @@
+/* Defense Contracts Tracker Styles */
+.defense-contracts {
+    padding: 20px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.defense-contracts .ui.cards {
+    margin: 0 -10px 25px -10px;
+}
+
+/* Summary Cards - Custom Statistics */
+.defense-contracts .ui.card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.25);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin: 0 10px !important;
+}
+
+.defense-contracts .ui.card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+}
+
+.defense-contracts .ui.card .content {
+    padding: 24px 20px !important;
+}
+
+/* Custom statistic wrapper - NO Semantic UI conflicts */
+.defense-contracts .statistic-wrapper {
+    text-align: center;
+    padding: 8px 0;
+}
+
+.defense-contracts .statistic-value {
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    font-size: 2.2rem !important;
+    line-height: 1.1 !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    margin-bottom: 6px !important;
+    display: block !important;
+    white-space: nowrap;
+}
+
+.defense-contracts .statistic-label {
+    color: rgba(255, 255, 255, 0.95) !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+    margin-top: 4px !important;
+    display: block !important;
+}
+
+.defense-contracts .ui.table {
+    font-size: 13px;
+    background: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.defense-contracts .ui.table thead th {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 14px 12px !important;
+    border: none !important;
+}
+
+.defense-contracts .ui.table thead tr {
+    border-bottom: 3px solid #1a252f !important;
+}
+
+.defense-contracts .ui.table tbody tr {
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #e8eaed;
+}
+
+.defense-contracts .ui.table tbody tr:hover {
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+    transform: scale(1.005);
+}
+
+.defense-contracts .ui.table tbody td {
+    color: #333;
+    padding: 14px 12px !important;
+    vertical-align: middle;
+    border-top: 1px solid #e8eaed !important;
+}
+
+.defense-contracts .ui.table tbody td:first-child {
+    font-weight: 600;
+    color: #1e3c72;
+}
+
+.defense-contracts .ui.label {
+    font-weight: 700;
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+    color: white !important;
+    box-shadow: 0 2px 6px rgba(17, 153, 142, 0.3);
+    border-radius: 6px !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+}
+
+/* Section headers */
+.defense-contracts .ui.header {
+    color: #1e3c72 !important;
+    font-weight: 800;
+    margin-bottom: 20px !important;
+}
+
+.defense-contracts .ui.header .subheader {
+    color: #666 !important;
+    font-weight: 400;
+    font-size: 13px !important;
+    margin-top: 6px !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .defense-contracts {
+        padding: 16px;
+    }
+
+    .defense-contracts .ui.cards {
+        margin: 0 -8px 20px -8px;
+    }
+
+    .defense-contracts .ui.card {
+        margin: 0 8px !important;
+    }
+
+    .defense-contracts .ui.card .statistic .value {
+        font-size: 1.75rem !important;
+    }
+
+    .defense-contracts .ui.table {
+        font-size: 12px;
+    }
+
+    .defense-contracts .ui.table thead th {
+        font-size: 9px;
+        padding: 12px 8px !important;
+    }
+
+    .defense-contracts .ui.table tbody td {
+        padding: 12px 8px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .defense-contracts {
+        padding: 12px;
+        border-radius: 8px;
+    }
+
+    .defense-contracts .ui.cards {
+        margin: 0 -4px 15px -4px;
+    }
+
+    .defense-contracts .ui.card {
+        margin: 0 4px !important;
+    }
+
+    .defense-contracts .ui.card .content {
+        padding: 18px 14px !important;
+    }
+
+    .defense-contracts .ui.card .statistic .value {
+        font-size: 1.5rem !important;
+    }
+
+    .defense-contracts .ui.card .statistic .label {
+        font-size: 11px !important;
+    }
+    
+    .defense-contracts .ui.table {
+        font-size: 11px;
+    }
+    
+    .defense-contracts .ui.table thead th {
+        font-size: 8px;
+        padding: 10px 6px !important;
+    }
+    
+    .defense-contracts .ui.table tbody td {
+        padding: 10px 6px !important;
+    }
+    
+    .defense-contracts .ui.label {
+        font-size: 10px !important;
+        padding: 4px 8px !important;
+    }
+}
+
+/* Dark mode support */
+.dark-mode .defense-contracts {
+    background: #1e2636;
+    color: #e0e6ed;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .defense-contracts .ui.card {
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .defense-contracts .ui.card:hover {
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+}
+
+.dark-mode .defense-contracts .ui.header {
+    color: #90cdf4 !important;
+}
+
+.dark-mode .defense-contracts .ui.header .subheader {
+    color: #a0aec0 !important;
+}
+
+.dark-mode .defense-contracts .ui.table {
+    background: #253045;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .defense-contracts .ui.table thead th {
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+    color: #e0e6ed !important;
+    border-bottom: 3px solid #4a5568 !important;
+}
+
+.dark-mode .defense-contracts .ui.table tbody tr {
+    background: #253045;
+    border-bottom: 1px solid #2d3748;
+}
+
+.dark-mode .defense-contracts .ui.table tbody tr:hover {
+    background: linear-gradient(90deg, rgba(74, 85, 104, 0.4) 0%, rgba(45, 55, 72, 0.4) 100%);
+}
+
+.dark-mode .defense-contracts .ui.table tbody td {
+    color: #e0e6ed;
+    border-top: 1px solid #2d3748 !important;
+}
+
+.dark-mode .defense-contracts .ui.table tbody td:first-child {
+    color: #90cdf4;
+}
+
+.dark-mode .defense-contracts .ui.label {
+    background: linear-gradient(135deg, #38a169 0%, #48bb78 100%) !important;
+    box-shadow: 0 2px 6px rgba(56, 161, 105, 0.4);
+}

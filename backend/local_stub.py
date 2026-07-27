@@ -133,6 +133,24 @@ def _load_stock_universe(limit: int = 1200) -> list[dict]:
     except Exception:
         symbols = []
 
+    # Rehydrate the full exchange universe when the checked-in snapshot is
+    # incomplete. Nasdaq's public screener currently provides 1,000+ symbols.
+    if len(symbols) < limit:
+        try:
+            response = requests.get(
+                "https://api.nasdaq.com/api/screener/stocks?tableonly=true&limit=5000",
+                headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"},
+                timeout=12,
+            )
+            rows = ((response.json().get("data") or {}).get("table") or {}).get("rows") or []
+            symbols.extend(
+                str(row.get("symbol", "")).upper()
+                for row in rows
+                if re.match(r"^[A-Z]{1,5}$", str(row.get("symbol", "")).upper())
+            )
+        except Exception as error:
+            print(f"Ticker universe refresh unavailable: {error}")
+
     ordered = []
     seen = set()
     for symbol in priority + symbols:

@@ -1,0 +1,27 @@
+.ptr-root {
+  position: relative;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ptr-indicator {
+  position: absolute;
+  top: -48px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gp-paper, #f3ede0);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(20,17,13,0.15);
+  z-index: 10;
+  pointer-events: none;
+  transition: transform 0.1s linear, opacity 0.1s linear;
+}
+
+.dark-mode .ptr-indicator {
+  background: var(--gp-ink, #14110d);
+}

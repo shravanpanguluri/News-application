@@ -27,10 +27,6 @@ def parse_args():
                    help="Random combinations to try per horizon (default 60)")
     p.add_argument("--cv", type=int, default=3,
                    help="Cross-validation folds inside search (default 3)")
-    p.add_argument("--n-jobs", type=int, default=1,
-                   help="Parallel jobs for RandomizedSearchCV (default 1)")
-    p.add_argument("--max-samples", type=int, default=None,
-                   help="Optional stratified sample cap per horizon for quick refreshes")
     return p.parse_args()
 
 
@@ -39,7 +35,7 @@ def main():
 
     print("=" * 62)
     print("  Predovex — Production Model Retraining (RandomizedSearch)")
-    print(f"  n_iter={args.n_iter}  cv={args.cv}  n_jobs={args.n_jobs}  horizons: 1d/3d/7d/30d")
+    print(f"  n_iter={args.n_iter}  cv={args.cv}  horizons: 1d/3d/7d/30d")
     print("=" * 62)
 
     if not DATA_FILE.exists():
@@ -55,13 +51,7 @@ def main():
     print(f"  Total fits: ~{args.n_iter * args.cv * 4} model trainings\n")
 
     predictor = GovernmentEventPredictor(model_dir=str(MODEL_DIR))
-    results   = predictor.train_model(
-        correlation_data,
-        n_iter=args.n_iter,
-        cv=args.cv,
-        n_jobs=args.n_jobs,
-        max_samples=args.max_samples,
-    )
+    results   = predictor.train_model(correlation_data, n_iter=args.n_iter, cv=args.cv)
 
     print("\n" + "=" * 62)
     print("  Final Results")

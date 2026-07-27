@@ -1,0 +1,119 @@
+/* Trending Predictions Component Styles - Enhanced */
+
+.trend-card {
+    transition: all 0.3s ease !important;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.trend-card:hover {
+    transform: translateY(-5px) !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+.trend-card.red {
+    border-left: 4px solid #db2828 !important;
+}
+
+.trend-card.orange {
+    border-left: 4px solid #f2711c !important;
+}
+
+.trend-card.yellow {
+    border-left: 4px solid #fbbd08 !important;
+}
+
+.trend-card.blue {
+    border-left: 4px solid #2185d0 !important;
+}
+
+.trend-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.trend-topic {
+    font-size: 1.1em !important;
+    font-weight: 600 !important;
+    margin: 10px 0 !important;
+    text-transform: capitalize;
+}
+
+.prediction-info {
+    margin: 8px 0;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.prediction-info strong {
+    color: #a333c8;
+}
+
+.intensity-label {
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    font-size: 0.75em !important;
+}
+
+/* Dark Mode Support */
+.dark-mode .trend-card {
+    background: #1a202c !important;
+    border-color: rgba(159, 122, 234, 0.3) !important;
+}
+
+.dark-mode .trend-topic {
+    color: #e2e8f0 !important;
+}
+
+.dark-mode .prediction-info strong {
+    color: #9f7aea !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .trend-card {
+        margin: 10px 0 !important;
+    }
+
+    .prediction-info {
+        font-size: 0.85em;
+    }
+}
+
+/* Loading Animation */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Crystal Ball Icon Animation */
+.ui.header .icon {
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from {
+        text-shadow: 0 0 5px #667eea, 0 0 10px #667eea;
+    }
+    to {
+        text-shadow: 0 0 10px #667eea, 0 0 20px #667eea, 0 0 30px #764ba2;
+    }
+}
+
+/* Filter Buttons */
+.ui.buttons .button {
+    transition: all 0.2s ease;
+}
+
+.ui.buttons .button:hover {
+    transform: translateY(-2px);
+}

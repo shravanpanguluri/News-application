@@ -1,0 +1,148 @@
+.breaking-news-page {
+  padding: 20px 0;
+}
+
+.breaking-page-header {
+  font-size: 2.2rem !important;
+  margin-bottom: 20px !important;
+  display: flex !important;
+  align-items: center;
+  gap: 12px !important;
+  flex-wrap: wrap;
+}
+
+.breaking-page-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 14px 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #666;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.breaking-news-card {
+  transition: all 0.3s !important;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.breaking-news-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.18) !important;
+}
+
+.breaking-news-image-placeholder {
+  height: 200px;
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.breaking-news-badge {
+  background: #e74c3c;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  display: inline-block;
+  margin-bottom: 10px;
+  animation: pulse-badge 2s infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.65;
+  }
+}
+
+.breaking-news-source {
+  display: inline-block;
+  margin-right: 12px;
+  color: #666;
+  font-size: 12px;
+}
+
+.breaking-news-time {
+  display: inline-block;
+  color: #888;
+  font-size: 12px;
+}
+
+/* =============================================
+   MOBILE (≤ 480px)
+   ============================================= */
+@media (max-width: 480px) {
+  .breaking-page-header {
+    font-size: 1.5rem !important;
+    gap: 8px !important;
+  }
+
+  .breaking-page-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .breaking-news-image-placeholder {
+    height: 140px;
+  }
+
+  .breaking-news-card {
+    margin-bottom: 12px;
+  }
+}
+
+/* =============================================
+   TABLET (481px – 1024px)
+   ============================================= */
+@media (min-width: 481px) and (max-width: 1024px) {
+  .breaking-page-header {
+    font-size: 1.9rem !important;
+  }
+
+  .breaking-news-image-placeholder {
+    height: 170px;
+  }
+}
+
+/* =============================================
+   PROJECTOR (≥ 1441px)
+   ============================================= */
+@media (min-width: 1441px) {
+  .breaking-page-header {
+    font-size: 2.8rem !important;
+  }
+
+  .breaking-news-image-placeholder {
+    height: 260px;
+  }
+
+  .breaking-page-meta {
+    font-size: 16px;
+    padding: 18px 20px;
+  }
+
+  .breaking-news-badge {
+    font-size: 13px;
+    padding: 6px 14px;
+  }
+
+  .breaking-news-source,
+  .breaking-news-time {
+    font-size: 14px;
+  }
+}

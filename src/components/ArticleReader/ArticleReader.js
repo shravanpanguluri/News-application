@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Header, Button, Icon, Segment, Loader, Divider, List, Grid, Statistic, Label } from 'semantic-ui-react';
+import { Modal, Header, Image, Button, Icon, Segment, Loader, Divider, List, Grid, Statistic, Label } from 'semantic-ui-react';
 import { narrativeDNA } from '../../utils/narrativeDNA';
 import { BACKEND_URL } from '../../API/governmentApi';
 import './ArticleReader.css';
@@ -12,12 +12,8 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 	const [userTier, setUserTier] = useState(localStorage.getItem('tier') || 'free');
 
 	useEffect(() => {
-		if (open && article) {
-			if (article.url) {
-				fetchIntelligenceBrief(article.url);
-			} else {
-				setArticleData({ success: false, fallback: true });
-			}
+		if (open && article && article.url) {
+			fetchIntelligenceBrief(article.url);
 			runAIAnalysis(article);
 			setUserTier(localStorage.getItem('tier') || 'free');
 		} else if (!open) {
@@ -29,7 +25,7 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 	const runAIAnalysis = async (art) => {
 		setAnalyzing(true);
 		try {
-			const text = art.content || art.description || art.ai_summary || art.title;
+			const text = art.description || art.ai_summary || art.title;
 			const genes = await narrativeDNA.extractGenes(text, art.title);
 			setAiGenes(genes);
 		} catch (err) {
@@ -56,62 +52,25 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 	if (!article) return null;
 
 	const isDarkMode = document.body.parentElement.classList.contains('dark-mode') || document.querySelector('.dark-mode');
-	const hasIntelBrief = !!(articleData && articleData.intel_brief);
-	const showArticleBodyView = false;
-	const articleBody = article.content || article.description || '';
-	const articleSummary = article.ai_summary && article.ai_summary !== 'Summary unavailable.' ? article.ai_summary : article.description;
-	const extractedParagraphs = hasIntelBrief && Array.isArray(articleData.intel_brief.full_reconstructed_report)
-		? articleData.intel_brief.full_reconstructed_report
-		: [];
-	const sourceParagraphs = extractedParagraphs.length > 0
-		? extractedParagraphs
-		: (articleBody || article.description || article.title || '')
-			.split(/\n+/)
-			.map(function(para) { return para.trim(); })
-			.filter(function(para) { return para.length > 0; });
-	const analysisText = sourceParagraphs.join(' ');
-	const sourceSentences = analysisText
-		.split(/(?<=[.!?])\s+/)
-		.map(function(sentence) { return sentence.trim(); })
-		.filter(function(sentence) { return sentence.length > 35; });
-	const executiveSummary = (articleData && articleData.intel_brief && articleData.intel_brief.executive_summary) ||
-		(articleSummary && articleSummary !== 'Summary unavailable.' ? articleSummary : null) ||
-		sourceSentences[0] ||
-		article.title;
-	const criticalInsights = (articleData && articleData.intel_brief && articleData.intel_brief.critical_insights && articleData.intel_brief.critical_insights.length > 0)
-		? articleData.intel_brief.critical_insights
-		: (sourceSentences.length > 0 ? sourceSentences.slice(0, 5) : [executiveSummary]);
-	const contextualBrief = (articleData && articleData.intel_brief && articleData.intel_brief.contextual_brief) ||
-		[
-			`Predovex is analyzing this report as a ${article.category || 'general'} intelligence signal from ${article.source || 'the source publication'}.`,
-			analysisText
-				? `The available article text points to operational, market, policy, or reputational implications that should be monitored as the story develops.`
-				: `The source did not expose full body text locally, so this analysis is based on the article metadata and summary available in the feed.`
-		].join('\n\n');
-	const strategicOutlook = (articleData && articleData.intel_brief && articleData.intel_brief.strategic_outlook) ||
-		`Predovex will continue monitoring this story for follow-on developments, actor responses, and second-order market or policy effects.`;
-	const framingConfidence = aiGenes && aiGenes.framing && Number.isFinite(aiGenes.framing.confidence)
-		? Math.round(aiGenes.framing.confidence * 100)
-		: 72;
 
 	return (
 		<Modal open={open} onClose={onClose} size="large" closeIcon className={`intel-reader-modal ${isDarkMode ? 'dark' : ''}`}>
-			<Modal.Header style={{ background: 'var(--gp-ink, #1a1a18)', color: 'var(--gp-paper, #fdfaf5)', borderBottom: 'none' }}>
+			<Modal.Header style={{ background: isDarkMode ? '#000' : '#1b1c1d', color: 'white', borderBottom: isDarkMode ? '1px solid #333' : 'none' }}>
 				<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 					<span>
 						<Icon name="shield" color="red" />
-						PREDOVEX INTELLIGENCE REPORT [CONFIDENTIAL]
+						GOVPULSE INTELLIGENCE REPORT [CONFIDENTIAL]
 					</span>
 					<Label color="red" basic={!isDarkMode} inverted={isDarkMode}>LIVE ANALYSIS</Label>
 				</div>
 			</Modal.Header>
 			
-			<Modal.Content scrolling style={{ background: 'var(--gp-paper, #fdfaf5)', color: 'var(--gp-ink, #1a1a18)' }}>
+			<Modal.Content scrolling style={{ background: isDarkMode ? '#0a0a0a' : '#fcfcfc', color: isDarkMode ? '#eee' : 'inherit' }}>
 				<div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: `2px double ${isDarkMode ? '#333' : '#eee'}`, paddingBottom: '10px' }}>
 					<Header as="h1" style={{ fontSize: '2.5rem', textTransform: 'uppercase', letterSpacing: '1px', color: isDarkMode ? 'white' : 'inherit' }}>
 						{article.title}
 					</Header>
-					<div style={{ color: 'var(--gp-ink-mute, #888)', fontWeight: 'bold' }}>
+					<div style={{ color: '#888', fontWeight: 'bold' }}>
 						OFFICE OF STRATEGIC INTELLIGENCE | REPORT ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}
 					</div>
 				</div>
@@ -120,7 +79,7 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 					<div style={{ padding: '100px', textAlign: 'center' }}>
 						<Loader active inline="centered" size="huge" inverted={isDarkMode}>PROCESSING INTELLIGENCE...</Loader>
 					</div>
-				) : showArticleBodyView ? (
+				) : (articleData && articleData.success === false) ? (
 					/* ── RSS-based article view when full fetch fails ── */
 					<div>
 						{/* Hero image */}
@@ -137,34 +96,31 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 
 						{/* Source + date bar */}
 						<div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px', flexWrap: 'wrap' }}>
-							<Label style={{ background: 'var(--gp-ink, #1a1a18)', color: 'var(--gp-paper, #fdfaf5)', borderRadius: '0', fontSize: '11px', fontWeight: 700, letterSpacing: '0.5px' }}>
+							<Label style={{ background: '#003591', color: 'white', borderRadius: '4px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.5px' }}>
 								{article.source || 'News Source'}
 							</Label>
 							{article.published_at && (
-								<span style={{ color: 'var(--gp-ink-mute, #888)', fontSize: '13px' }}>
+								<span style={{ color: isDarkMode ? '#7a93aa' : '#5a6778', fontSize: '13px' }}>
 									<Icon name="clock outline" />
 									{new Date(article.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
 								</span>
 							)}
-							<span style={{ marginLeft: 'auto', color: 'var(--gp-ink-mute, #888)', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-								<Icon name="shield alternate" size="small" /> Predovex Portal View
+							<span style={{ marginLeft: 'auto', color: isDarkMode ? '#5a7a8f' : '#94a3b8', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+								<Icon name="shield alternate" size="small" /> GovPulse Portal View
 							</span>
 						</div>
 
-						{/* Article body content */}
-						{articleBody && (
+						{/* Description / body content */}
+						{(article.description || article.content) && (
 							<div style={{
 								fontSize: '16px',
 								lineHeight: '1.85',
-								color: 'var(--gp-ink, #1a1a18)',
+								color: isDarkMode ? '#c8dff0' : '#1c2b39',
 								marginBottom: '24px',
-								borderLeft: '3px solid var(--gp-accent, #c8553d)',
+								borderLeft: '3px solid #003591',
 								paddingLeft: '20px',
 							}}>
-								<Header as="h3" style={{ color: 'var(--gp-ink, #1a1a18)', marginBottom: '14px' }}>
-									<Icon name="newspaper outline" /> FULL STORY
-								</Header>
-								{articleBody.split(/\n+/).map(function(para, i) {
+								{(article.description || article.content).split(/\n+/).map(function(para, i) {
 									return para.trim().length > 0
 										? <p key={i} style={{ margin: '0 0 14px 0' }}>{para.trim()}</p>
 										: null;
@@ -173,31 +129,31 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 						)}
 
 						{/* AI Summary section */}
-						{articleSummary && (
+						{article.ai_summary && article.ai_summary !== 'Summary unavailable.' && (
 							<Segment style={{
-								background: 'var(--gp-rule, rgba(0,0,0,0.04))',
-								border: '1px solid var(--gp-rule-2, #d8d0c0)',
-								borderLeft: '4px solid var(--gp-accent, #c8553d)',
-								borderRadius: '0',
+								background: isDarkMode ? 'rgba(0,53,145,0.12)' : '#eaf0f6',
+								border: isDarkMode ? '1px solid rgba(0,163,224,0.2)' : '1px solid #c8d4df',
+								borderLeft: '4px solid #00a3e0',
+								borderRadius: '6px',
 								marginBottom: '20px'
 							}}>
-								<Header as="h5" style={{ color: 'var(--gp-accent, #c8553d)', marginBottom: '8px' }}>
+								<Header as="h5" style={{ color: isDarkMode ? '#00a3e0' : '#003591', marginBottom: '8px' }}>
 									<Icon name="lightbulb outline" /> AI Summary
 								</Header>
 								<p style={{ color: isDarkMode ? '#b8d0e8' : '#3a4f63', lineHeight: '1.7', margin: 0 }}>
-									{articleSummary}
+									{article.ai_summary}
 								</p>
 							</Segment>
 						)}
 
 						{/* View original link */}
-						<div style={{ textAlign: 'right', paddingTop: '12px', borderTop: '1px solid var(--gp-rule-2, #d8d0c0)' }}>
-							<span style={{ color: 'var(--gp-ink-mute, #888)', fontSize: '12px', marginRight: '12px' }}>
+						<div style={{ textAlign: 'right', paddingTop: '12px', borderTop: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : '#e2eaf2'}` }}>
+							<span style={{ color: isDarkMode ? '#5a7a8f' : '#94a3b8', fontSize: '12px', marginRight: '12px' }}>
 								<Icon name="info circle" size="small" /> Portal view — some content may be abbreviated
 							</span>
 							<Button
 								size="small"
-								style={{ background: 'transparent', color: 'var(--gp-accent, #c8553d)', border: '1px solid var(--gp-accent, #c8553d)', borderRadius: '0' }}
+								style={{ background: 'transparent', color: isDarkMode ? '#00a3e0' : '#0059b3', border: `1px solid ${isDarkMode ? '#00a3e0' : '#0059b3'}`, borderRadius: '4px' }}
 								onClick={function() { window.open(article.url, '_blank'); }}
 							>
 								<Icon name="external alternate" /> Full Article
@@ -207,16 +163,15 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 				) : (
 					<div className="intel-content">
 						{/* Executive Summary */}
-						<Segment raised color="black" style={{ borderLeft: '10px solid var(--gp-ink, #1a1a18)', background: 'var(--gp-paper, #fdfaf5)', color: 'var(--gp-ink, #1a1a18)' }}>
+						<Segment raised color="black" style={{ borderLeft: '10px solid #1b1c1d', background: isDarkMode ? '#1b1c1d' : 'white', color: isDarkMode ? '#ddd' : 'inherit' }}>
 							<Header as="h2" inverted={isDarkMode}>
 								<Icon name="file alternate outline" />
-								FULL ANALYSIS
+								EXECUTIVE SUMMARY
 							</Header>
 							<p style={{ fontSize: '1.2rem', lineHeight: '1.8', color: isDarkMode ? '#ccc' : '#333' }}>
-								{executiveSummary}
-							</p>
-							<p style={{ fontSize: '1rem', lineHeight: '1.7', color: isDarkMode ? '#aaa' : '#555', marginTop: '12px' }}>
-								{contextualBrief}
+								{(articleData && articleData.intel_brief && articleData.intel_brief.executive_summary) || 
+								 (article.ai_summary && article.ai_summary !== 'Summary unavailable.' ? article.ai_summary : null) || 
+								 article.description || article.title}
 							</p>
 						</Segment>
 
@@ -244,7 +199,7 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 													{aiGenes.framing.primary} Perspective
 												</div>
 												<p style={{ opacity: 0.8, fontSize: '0.9rem' }}>
-													The narrative is currently dominated by {aiGenes.framing.primary} considerations, showing high confidence in this framing ({framingConfidence}%).
+													The narrative is currently dominated by {aiGenes.framing.primary} considerations, showing high confidence in this framing ({Math.round(aiGenes.framing.confidence * 100)}%).
 												</p>
 											</Segment>
 										</Grid.Column>
@@ -313,20 +268,35 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 								<Header as="h3" dividing inverted={isDarkMode}>CRITICAL ANALYTICS</Header>
 								<List bulleted size="large" style={{ lineHeight: '2', color: isDarkMode ? '#bbb' : 'inherit' }}>
 									{(() => {
-										return criticalInsights.slice(0, 5).map((s, i) => (
+										const insights = articleData && articleData.intel_brief && articleData.intel_brief.critical_insights;
+										if (insights && insights.length > 0) {
+											return insights.map((insight, i) => (
+												<List.Item key={i} style={{ marginBottom: '10px' }}>{insight}</List.Item>
+											));
+										}
+										// Fallback: derive bullets from ai_summary or description
+										const source = (article.ai_summary && article.ai_summary !== 'Summary unavailable.')
+											? article.ai_summary
+											: article.description || article.title;
+										// Avoid splitting on dots in domains/abbreviations — require space+capital after punctuation
+										var parts = source.split(/[.!?]+\s+(?=[A-Z])/).filter(function(s) { return s.trim().length > 25; });
+										var bullets = parts.length > 0 ? parts : [source];
+										return bullets.slice(0, 3).map((s, i) => (
 											<List.Item key={i} style={{ marginBottom: '10px' }}>{s.trim()}</List.Item>
 										));
 									})()}
 								</List>
 								
-								<div style={{ marginTop: '30px', padding: '20px', background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#f4f7f9', borderRadius: '12px', border: `1px solid ${isDarkMode ? '#333' : '#e1e8ed'}` }}>
-									<Header as="h4" style={{ color: 'var(--gp-accent, #c8553d)', marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-										<Icon name="info circle" /> Analyst's Contextual Briefing
-									</Header>
-									<div style={{ fontSize: '1.1rem', lineHeight: '1.7', color: isDarkMode ? '#bbb' : '#444', whiteSpace: 'pre-wrap' }}>
-										{contextualBrief}
+								{(articleData && articleData.intel_brief && articleData.intel_brief.contextual_brief) && (
+									<div style={{ marginTop: '30px', padding: '20px', background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#f4f7f9', borderRadius: '12px', border: `1px solid ${isDarkMode ? '#333' : '#e1e8ed'}` }}>
+										<Header as="h4" inverted={isDarkMode} style={{ color: '#2185d0', marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+											<Icon name="info circle" /> Analyst's Contextual Briefing
+										</Header>
+										<div style={{ fontSize: '1.1rem', lineHeight: '1.7', color: isDarkMode ? '#bbb' : '#444', whiteSpace: 'pre-wrap' }}>
+											{articleData.intel_brief.contextual_brief}
+										</div>
 									</div>
-								</div>
+								)}
 							</Grid.Column>
 							<Grid.Column width={6}>
 								<Segment color="red" secondary inverted={isDarkMode}>
@@ -339,20 +309,36 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 							</Grid.Column>
 						</Grid>
 
+						{/* Full Reconstructed Report */}
+						{(articleData && articleData.intel_brief && articleData.intel_brief.full_reconstructed_report) && (
+							<div style={{ marginTop: '30px' }}>
+								<Header as="h3" color="blue" dividing>
+									<Icon name="file text" /> FULL BUREAU ANALYSIS
+								</Header>
+								<div className="reconstructed-content" style={{ fontSize: '1.15rem', lineHeight: '1.9', color: isDarkMode ? '#ddd' : '#333' }}>
+									{articleData.intel_brief.full_reconstructed_report.map((paragraph, idx) => (
+										<p key={idx} style={{ marginBottom: '20px', textAlign: 'justify' }}>
+											{paragraph}
+										</p>
+									))}
+								</div>
+							</div>
+						)}
+
 						{/* Strategic Outlook */}
-						<Segment tertiary style={{ marginTop: '30px', borderTop: '4px solid var(--gp-accent, #c8553d)' }}>
+						<Segment tertiary inverted={isDarkMode} style={{ marginTop: '30px', borderTop: '4px solid #2185d0' }}>
 							<Header as="h3" color="blue" inverted={isDarkMode}>
 								<Icon name="external alternate" />
 								STRATEGIC OUTLOOK
 							</Header>
 							<p style={{ fontSize: '1.1rem', fontStyle: 'italic' }}>
-								{strategicOutlook}
+								{(articleData && articleData.intel_brief && articleData.intel_brief.strategic_outlook) || "Monitoring for further escalation or policy shifts."}
 							</p>
 						</Segment>
 
 						<div style={{ marginTop: '40px', textAlign: 'center', opacity: 0.5 }}>
 							<Divider inverted={isDarkMode} />
-							<p style={{ color: isDarkMode ? '#888' : 'inherit' }}>PREPARED PROACTIVELY BY PREDOVEX ANALYSIS BUREAU</p>
+							<p style={{ color: isDarkMode ? '#888' : 'inherit' }}>PREPARED PROACTIVELY BY GOVPULSE ANALYSIS BUREAU</p>
 							<Button 
 								basic 
 								inverted={isDarkMode}

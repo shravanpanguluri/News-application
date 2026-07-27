@@ -75,7 +75,7 @@ const TrendingPredictions = () => {
             {/* Header Section */}
             <Segment raised style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', marginBottom: '20px' }}>
                 <Header as="h1" textAlign="center" style={{ color: 'white', marginBottom: '10px' }}>
-                    <Icon name="magic" />
+                    <Icon name="crystal" />
                     AI Trend Predictions
                     <Header.Subheader style={{ color: 'rgba(255,255,255,0.9)' }}>
                         Predicting viral topics from GDELT global news analysis (65+ languages, 100K+ sources daily)
@@ -237,7 +237,7 @@ const TrendingPredictions = () => {
             ) : (
                 <Segment raised placeholder>
                     <Header icon>
-                        <Icon name="magic" />
+                        <Icon name="crystal" />
                         No Trending Predictions Available
                     </Header>
                     <p>Check back later or click Refresh to fetch latest predictions.</p>

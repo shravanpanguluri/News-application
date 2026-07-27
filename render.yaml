@@ -1,0 +1,87 @@
+services:
+  - type: web
+    name: predovex-backend
+    runtime: docker
+    region: oregon
+    plan: free
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: predovex-postgres
+          property: connectionString
+      - key: SECRET_KEY
+        sync: false
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "60"
+      - key: REACT_APP_NEWS_API_KEY
+        sync: false
+      - key: REDDIT_CLIENT_ID
+        sync: false
+      - key: REDDIT_CLIENT_SECRET
+        sync: false
+      - key: REDDIT_USER_AGENT
+        sync: false
+      - key: FRED_API_KEY
+        sync: false
+      - key: ALPHA_VANTAGE_API_KEY
+        sync: false
+      - key: FINNHUB_API_KEY
+        sync: false
+
+  # Render cron jobs run bounded tasks and then exit. They do not keep a
+  # second copy of the API running.
+  - type: cron
+    name: predovex-news-job
+    runtime: docker
+    region: oregon
+    plan: starter
+    schedule: "*/30 * * * *"
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    dockerCommand: python render_worker.py --job news
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: predovex-postgres
+          property: connectionString
+      - key: REACT_APP_NEWS_API_KEY
+        sync: false
+
+  - type: cron
+    name: predovex-market-job
+    runtime: docker
+    region: oregon
+    plan: starter
+    schedule: "*/15 * * * *"
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    dockerCommand: python render_worker.py --job market
+
+  - type: cron
+    name: predovex-prediction-job
+    runtime: docker
+    region: oregon
+    plan: starter
+    schedule: "0 */6 * * *"
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    dockerCommand: python render_worker.py --job predictions
+
+  - type: cron
+    name: predovex-government-job
+    runtime: docker
+    region: oregon
+    plan: starter
+    schedule: "0 */6 * * *"
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    dockerCommand: python render_worker.py --job government
+
+databases:
+  - name: predovex-postgres
+    plan: free
