@@ -4,7 +4,7 @@ services:
     runtime: docker
     region: oregon
     plan: free
-    dockerContext: ./backend
+    dockerContext: .
     dockerfilePath: ./backend/Dockerfile
     healthCheckPath: /health
     envVars:
@@ -41,7 +41,7 @@ services:
     region: oregon
     plan: starter
     schedule: "*/30 * * * *"
-    dockerContext: ./backend
+    dockerContext: .
     dockerfilePath: ./backend/Dockerfile
     dockerCommand: python render_worker.py --job news
     envVars:
@@ -58,7 +58,7 @@ services:
     region: oregon
     plan: starter
     schedule: "*/15 * * * *"
-    dockerContext: ./backend
+    dockerContext: .
     dockerfilePath: ./backend/Dockerfile
     dockerCommand: python render_worker.py --job market
 
@@ -68,7 +68,7 @@ services:
     region: oregon
     plan: starter
     schedule: "0 */6 * * *"
-    dockerContext: ./backend
+    dockerContext: .
     dockerfilePath: ./backend/Dockerfile
     dockerCommand: python render_worker.py --job predictions
 
@@ -78,7 +78,7 @@ services:
     region: oregon
     plan: starter
     schedule: "0 */6 * * *"
-    dockerContext: ./backend
+    dockerContext: .
     dockerfilePath: ./backend/Dockerfile
     dockerCommand: python render_worker.py --job government
 
