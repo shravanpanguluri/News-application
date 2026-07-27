@@ -55,6 +55,13 @@ SQLALCHEMY_DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "sqlite:///./government_intelligence.db",
 )
+if SQLALCHEMY_DATABASE_URL.startswith("sqlite+aiosqlite://"):
+    # Older Render configurations used the async SQLite URL while this API
+    # uses synchronous SQLAlchemy sessions. Keep local/legacy deployments
+    # bootable, while PostgreSQL remains the production recommendation.
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace(
+        "sqlite+aiosqlite://", "sqlite://", 1
+    )
 if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
     SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace(
         "postgres://", "postgresql+psycopg2://", 1
