@@ -64,6 +64,10 @@ const CATEGORY_META = {
   finance:    { emoji: '💰', accent: '#00695c', label: 'Finance'    },
 };
 
+// Temporary public-beta mode: the platform can be used without an account.
+// Backend authentication remains available for a future private/premium tier.
+const PUBLIC_ACCESS_MODE = true;
+
 function App() {
 	let sources = [];
 	const [data, setData] = useState({
@@ -75,7 +79,8 @@ function App() {
 		governmentArticles: [],
 		isLoadingGov: false,
 		activeTab: 0,
-		isLoggedIn: false,
+		isLoggedIn: PUBLIC_ACCESS_MODE,
+		guestMode: PUBLIC_ACCESS_MODE,
 		userTier: 'free',
 		dailyLimit: 50,
 		requestsToday: 0,
@@ -184,6 +189,15 @@ function App() {
 	);
 
 	const loadWatchlistNews = async () => {
+		if (PUBLIC_ACCESS_MODE) {
+			try {
+				const keywords = JSON.parse(localStorage.getItem('predovex_watchlist_keywords') || '[]');
+				setData(prev => ({ ...prev, watchlistKeywords: Array.isArray(keywords) ? keywords : [], watchlistNews: [] }));
+			} catch (error) {
+				console.error('Error loading public watchlist:', error);
+			}
+			return;
+		}
 		if (!data.isLoggedIn) return;
 		try {
 			const news = await authAPI.getWatchlistNews();
@@ -200,6 +214,14 @@ function App() {
 
 	const addToWatchlist = async () => {
 		if (!data.newWatchlistKeyword) return;
+		if (PUBLIC_ACCESS_MODE) {
+			const keyword = data.newWatchlistKeyword.trim();
+			if (!keyword) return;
+			const keywords = Array.from(new Set([...(data.watchlistKeywords || []), keyword]));
+			localStorage.setItem('predovex_watchlist_keywords', JSON.stringify(keywords));
+			setData(prev => ({ ...prev, newWatchlistKeyword: '', watchlistKeywords: keywords }));
+			return;
+		}
 		try {
 			await authAPI.addToWatchlist(data.newWatchlistKeyword);
 			setData(prev => ({ ...prev, newWatchlistKeyword: '' }));
@@ -210,6 +232,12 @@ function App() {
 	};
 
 	const removeFromWatchlist = async (keyword) => {
+		if (PUBLIC_ACCESS_MODE) {
+			const keywords = (data.watchlistKeywords || []).filter(item => item !== keyword);
+			localStorage.setItem('predovex_watchlist_keywords', JSON.stringify(keywords));
+			setData(prev => ({ ...prev, watchlistKeywords: keywords }));
+			return;
+		}
 		try {
 			await authAPI.removeFromWatchlist(keyword);
 			loadWatchlistNews();
@@ -266,6 +294,17 @@ function App() {
 	}, [data.activeTab]);
 
 	const checkAuth = async () => {
+		if (PUBLIC_ACCESS_MODE) {
+			setData(prev => ({
+				...prev,
+				isLoggedIn: true,
+				guestMode: true,
+				userTier: 'public',
+				dailyLimit: -1,
+				hasPremium: false,
+			}));
+			return;
+		}
 		const token = localStorage.getItem('token');
 		const premium = localStorage.getItem('hasPremium');
 		if (token) {
@@ -1338,11 +1377,6 @@ function App() {
 	};
 
 	const loadGovernmentNews = async () => {
-		if (!data.isLoggedIn) {
-			setData(prev => ({ ...prev, showLoginModal: true }));
-			return;
-		}
-
 		setData(prev => ({ ...prev, isLoadingGov: true }));
 		try {
 			const articles = await articlesAPI.getAll(data.currentCategory, 25);
@@ -1381,7 +1415,11 @@ function App() {
 						<div className="gp-mast-sub">Markets · Intelligence · Policy · Defense · Established 2024</div>
 					</div>
 					<div className="gp-mast-right">
-						{data.isLoggedIn ? (
+						{data.guestMode ? (
+							<span className="gp-acct-chip gp-public-access" title="Public beta access">
+								<span className="gp-acct-dot" /><span className="gp-acct-name">PUBLIC ACCESS</span>
+							</span>
+						) : data.isLoggedIn ? (
 							<button className="gp-acct-chip" onClick={handleLogout} title="Click to logout">
 								<span className="gp-acct-dot" /><span className="gp-acct-name">{data.userTier.toUpperCase()}</span>
 							</button>
@@ -1608,7 +1646,7 @@ function App() {
 			</Container>
 
 			{/* Modals */}
-			<LoginModal
+			{!PUBLIC_ACCESS_MODE && <LoginModal
 				open={data.showLoginModal}
 				onClose={() => setData(prev => ({ ...prev, showLoginModal: false }))}
 				onLoginSuccess={() => {
@@ -1620,7 +1658,7 @@ function App() {
 					}));
 					checkAuth();
 				}}
-			/>
+			/>}
 
 			<RemoveAdsModal
 				open={data.showRemoveAdsModal}
