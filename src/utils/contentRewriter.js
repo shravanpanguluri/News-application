@@ -184,15 +184,20 @@ export function transformArticle(article) {
   if (!article) return null;
   
   const category = (article.category || 'general').toLowerCase();
+  const originalTitle = sanitizeArticleText(article.title);
+  const originalDescription = sanitizeArticleText(article.description || article.ai_summary);
+  const originalContent = sanitizeArticleText(article.content || article.full_content || article.body || article.text);
   
   return {
     ...article,
     // Rewrite headline as original Predovex analysis
-    title: rewriteHeadline(article.title, category),
-    originalTitle: article.title, // Keep for internal use only
+    title: rewriteHeadline(originalTitle, category),
+    originalTitle: originalTitle, // Keep for internal use only
     
     // Rewrite description with Predovex branding
-    description: rewriteDescription(article.description || article.ai_summary, article.title),
+    description: rewriteDescription(originalDescription, originalTitle),
+    content: originalContent || originalDescription,
+    full_content: originalContent || originalDescription,
     
     // Replace source with Predovex attribution
     source: getPredovexSource(category),
@@ -229,6 +234,8 @@ export function getDisplayArticle(article) {
   return {
     title: transformed.title,
     description: transformed.description,
+    content: transformed.content,
+    full_content: transformed.full_content,
     source: transformed.source,
     sourceLabel: transformed.sourceLabel,
     category: article.category,

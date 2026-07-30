@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Header, Image, Button, Icon, Segment, Loader, Divider, List, Grid, Statistic, Label } from 'semantic-ui-react';
 import { narrativeDNA } from '../../utils/narrativeDNA';
 import { BACKEND_URL } from '../../API/governmentApi';
+import { sanitizeArticleText } from '../../utils/textSanitizer';
 import './ArticleReader.css';
+
+const HOSTED_BACKEND_URL = 'https://govpulse-application.onrender.com';
 
 const ArticleReader = ({ article, open, onClose, allArticles }) => {
 	const [articleData, setArticleData] = useState(null);
@@ -25,7 +28,7 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 	const runAIAnalysis = async (art) => {
 		setAnalyzing(true);
 		try {
-			const text = art.description || art.ai_summary || art.title;
+			const text = art.content || art.full_content || art.body || art.description || art.ai_summary || art.title;
 			const genes = await narrativeDNA.extractGenes(text, art.title);
 			setAiGenes(genes);
 		} catch (err) {
@@ -38,8 +41,17 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 	const fetchIntelligenceBrief = async (url) => {
 		setLoading(true);
 		try {
-			const response = await fetch(`${BACKEND_URL}/article/fetch?url=${encodeURIComponent(url)}`);
-			const data = await response.json();
+			const endpoint = `/article/fetch?url=${encodeURIComponent(url)}`;
+			let response = await fetch(`${BACKEND_URL}${endpoint}`);
+			let data = await response.json();
+
+			if (data && data.success === false && BACKEND_URL !== HOSTED_BACKEND_URL) {
+				response = await fetch(`${HOSTED_BACKEND_URL}${endpoint}`);
+				if (response.ok) {
+					data = await response.json();
+				}
+			}
+
 			setArticleData(data);
 		} catch (err) {
 			console.error('Error fetching intelligence brief:', err);
@@ -52,6 +64,14 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 	if (!article) return null;
 
 	const isDarkMode = document.body.parentElement.classList.contains('dark-mode') || document.querySelector('.dark-mode');
+	const displayTitle = sanitizeArticleText(article.title, 'Predovex Intelligence Brief');
+	const sourceValue = article.source && typeof article.source === 'object' ? article.source.name : article.source;
+	const displaySource = sanitizeArticleText(article.sourceLabel || sourceValue, 'News Source');
+	const fallbackBody = sanitizeArticleText(
+		article.content || article.full_content || article.body || article.text || article.description || article.ai_summary
+	);
+	const fallbackSummary = sanitizeArticleText(article.ai_summary);
+	const portalIsAbbreviated = fallbackBody.length < 700;
 
 	return (
 		<Modal open={open} onClose={onClose} size="large" closeIcon className={`intel-reader-modal ${isDarkMode ? 'dark' : ''}`}>
@@ -68,7 +88,7 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 			<Modal.Content scrolling style={{ background: isDarkMode ? '#0a0a0a' : '#fcfcfc', color: isDarkMode ? '#eee' : 'inherit' }}>
 				<div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: `2px double ${isDarkMode ? '#333' : '#eee'}`, paddingBottom: '10px' }}>
 					<Header as="h1" style={{ fontSize: '2.5rem', textTransform: 'uppercase', letterSpacing: '1px', color: isDarkMode ? 'white' : 'inherit' }}>
-						{article.title}
+						{displayTitle}
 					</Header>
 					<div style={{ color: '#888', fontWeight: 'bold' }}>
 						OFFICE OF STRATEGIC INTELLIGENCE | REPORT ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}
@@ -87,7 +107,7 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 							<div style={{ width: '100%', maxHeight: '340px', overflow: 'hidden', borderRadius: '8px', marginBottom: '24px' }}>
 								<img
 									src={article.image || article.urlToImage}
-									alt={article.title}
+									alt={displayTitle}
 									style={{ width: '100%', height: '340px', objectFit: 'cover', display: 'block' }}
 									onError={function(e) { e.target.style.display = 'none'; }}
 								/>
@@ -97,7 +117,7 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 						{/* Source + date bar */}
 						<div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px', flexWrap: 'wrap' }}>
 							<Label style={{ background: '#003591', color: 'white', borderRadius: '4px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.5px' }}>
-								{article.source || 'News Source'}
+								{displaySource}
 							</Label>
 							{article.published_at && (
 								<span style={{ color: isDarkMode ? '#7a93aa' : '#5a6778', fontSize: '13px' }}>
@@ -111,7 +131,7 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 						</div>
 
 						{/* Description / body content */}
-						{(article.description || article.content) && (
+						{fallbackBody && (
 							<div style={{
 								fontSize: '16px',
 								lineHeight: '1.85',
@@ -120,7 +140,7 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 								borderLeft: '3px solid #003591',
 								paddingLeft: '20px',
 							}}>
-								{(article.description || article.content).split(/\n+/).map(function(para, i) {
+								{fallbackBody.split(/\n+/).map(function(para, i) {
 									return para.trim().length > 0
 										? <p key={i} style={{ margin: '0 0 14px 0' }}>{para.trim()}</p>
 										: null;
@@ -129,7 +149,7 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 						)}
 
 						{/* AI Summary section */}
-						{article.ai_summary && article.ai_summary !== 'Summary unavailable.' && (
+						{fallbackSummary && fallbackSummary !== 'Summary unavailable.' && (
 							<Segment style={{
 								background: isDarkMode ? 'rgba(0,53,145,0.12)' : '#eaf0f6',
 								border: isDarkMode ? '1px solid rgba(0,163,224,0.2)' : '1px solid #c8d4df',
@@ -141,7 +161,7 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 									<Icon name="lightbulb outline" /> AI Summary
 								</Header>
 								<p style={{ color: isDarkMode ? '#b8d0e8' : '#3a4f63', lineHeight: '1.7', margin: 0 }}>
-									{article.ai_summary}
+									{fallbackSummary}
 								</p>
 							</Segment>
 						)}
@@ -149,7 +169,7 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 						{/* View original link */}
 						<div style={{ textAlign: 'right', paddingTop: '12px', borderTop: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : '#e2eaf2'}` }}>
 							<span style={{ color: isDarkMode ? '#5a7a8f' : '#94a3b8', fontSize: '12px', marginRight: '12px' }}>
-								<Icon name="info circle" size="small" /> Portal view — some content may be abbreviated
+								<Icon name="info circle" size="small" /> {portalIsAbbreviated ? 'Portal view - abbreviated source text' : 'Portal view - expanded source text'}
 							</span>
 							<Button
 								size="small"
@@ -169,9 +189,9 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 								EXECUTIVE SUMMARY
 							</Header>
 							<p style={{ fontSize: '1.2rem', lineHeight: '1.8', color: isDarkMode ? '#ccc' : '#333' }}>
-								{(articleData && articleData.intel_brief && articleData.intel_brief.executive_summary) || 
-								 (article.ai_summary && article.ai_summary !== 'Summary unavailable.' ? article.ai_summary : null) || 
-								 article.description || article.title}
+								{(articleData && articleData.intel_brief && articleData.intel_brief.executive_summary) ||
+								 (fallbackSummary && fallbackSummary !== 'Summary unavailable.' ? fallbackSummary : null) ||
+								 fallbackBody || displayTitle}
 							</p>
 						</Segment>
 
@@ -275,9 +295,9 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 											));
 										}
 										// Fallback: derive bullets from ai_summary or description
-										const source = (article.ai_summary && article.ai_summary !== 'Summary unavailable.')
-											? article.ai_summary
-											: article.description || article.title;
+										const source = (fallbackSummary && fallbackSummary !== 'Summary unavailable.')
+											? fallbackSummary
+											: fallbackBody || displayTitle;
 										// Avoid splitting on dots in domains/abbreviations — require space+capital after punctuation
 										var parts = source.split(/[.!?]+\s+(?=[A-Z])/).filter(function(s) { return s.trim().length > 25; });
 										var bullets = parts.length > 0 ? parts : [source];
