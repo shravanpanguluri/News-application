@@ -1,0 +1,4 @@
+# Optional dependency for the isolated Crawl4AI ingestion worker.
+# Keep this out of requirements.txt: Crawl4AI launches Chromium and is not
+# suitable for the 512 MB Render Free web instance.
+crawl4ai>=0.9,<1.0
