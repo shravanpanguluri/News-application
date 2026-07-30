@@ -10,7 +10,18 @@
 .ti-inline-form { display:flex; align-items:center; gap:7px; padding:10px 18px; }
 .ti-inline-form input { flex:1; min-width:0; border:1px solid var(--gp-rule-2); background:transparent; color:var(--gp-ink); font-family:var(--gp-font-mono); padding:7px 10px; }
 .ti-inline-form > button { border:0; background:var(--gp-ink); color:var(--gp-paper); font-family:var(--gp-font-mono); padding:8px 15px; }
+.ti-inline-form > button:disabled { opacity:.55; cursor:wait; }
 .ti-range { display:flex; gap:4px; margin-left:auto; }
 .ti-empty-area { min-height:80px; border-top:1px solid var(--gp-rule); color:var(--gp-ink-mute); display:flex; align-items:center; justify-content:center; padding:20px; font-family:var(--gp-font-mono); font-size:12px; text-align:center; }
 .ti-insider-form input { text-transform:uppercase; }
+.ti-insider-results { border-top:1px solid var(--gp-rule); padding:14px 18px 18px; }
+.ti-insider-summary { color:var(--gp-ink-mute); font-family:var(--gp-font-mono); font-size:11px; letter-spacing:.08em; margin-bottom:10px; text-transform:uppercase; }
+.ti-insider-list { border:1px solid var(--gp-rule-2); }
+.ti-insider-row { display:grid; grid-template-columns:110px minmax(180px, 1fr) 80px minmax(180px, 1fr); gap:12px; align-items:center; padding:10px 12px; color:var(--gp-ink); text-decoration:none; border-bottom:1px solid var(--gp-rule); font-family:var(--gp-font-mono); font-size:12px; }
+.ti-insider-row:last-child { border-bottom:0; }
+.ti-insider-row:hover { background:rgba(200, 80, 58, .08); }
+.ti-insider-date, .ti-insider-formtype { color:var(--gp-accent-red); }
+.ti-insider-company { font-family:var(--gp-font-display); font-size:16px; }
+.ti-insider-accession { color:var(--gp-ink-mute); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 @media (max-width:900px) { .ti-two-col { grid-template-columns:1fr; } .ti-panel-header { align-items:flex-start; flex-direction:column; } .ti-range { margin-left:0; } }
+@media (max-width:700px) { .ti-insider-row { grid-template-columns:1fr; gap:5px; } }

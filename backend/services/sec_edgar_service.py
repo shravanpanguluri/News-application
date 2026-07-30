@@ -596,7 +596,8 @@ class SECEdgarService:
             return []
 
     def get_insider_trading_filings(self, company_name: str,
-                                   limit: int = 20) -> List[Dict]:
+                                   limit: int = 20,
+                                   days: int = 180) -> List[Dict]:
         """
         Get Form 4 insider trading filings for a company
 
@@ -605,11 +606,30 @@ class SECEdgarService:
         Args:
             company_name: Company name or ticker
             limit: Max results
+            days: Only include filings from the last N days
 
         Returns:
             List of Form 4 filings
         """
-        return self.get_company_filings(company_name, filing_type="4", limit=limit)
+        lookup_limit = max(limit * 3, limit)
+        filings = self.get_company_filings(company_name, filing_type="4", limit=lookup_limit)
+        cutoff = datetime.utcnow() - timedelta(days=days)
+
+        recent_filings = []
+        for filing in filings:
+            filing_date = filing.get("filing_date")
+            try:
+                parsed_date = datetime.strptime(filing_date, "%Y-%m-%d")
+            except (TypeError, ValueError):
+                continue
+
+            if parsed_date >= cutoff:
+                recent_filings.append(filing)
+
+            if len(recent_filings) >= limit:
+                break
+
+        return recent_filings
 
     def analyze_filing_for_signals(self, filing: Dict) -> Dict:
         """

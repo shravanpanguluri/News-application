@@ -51,27 +51,70 @@ function InsiderTradingFeed() {
   const [ticker, setTicker] = useState('');
   const [filings, setFilings] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchedTicker, setSearchedTicker] = useState('');
+  const [message, setMessage] = useState('Search any ticker to see Form 4 insider transaction filings from the SEC');
+
   const load = async () => {
-    if (!ticker.trim()) return;
+    const symbol = ticker.trim().toUpperCase();
+    if (!symbol) {
+      setFilings([]);
+      setSearchedTicker('');
+      setMessage('Enter a US-listed ticker symbol to search SEC Form 4 filings.');
+      return;
+    }
+
     setLoading(true);
+    setSearchedTicker(symbol);
+    setMessage('');
     try {
-      const response = await fetch(`${BACKEND_URL}/api/sec/insider/${ticker.trim().toUpperCase()}`);
+      const response = await fetch(`${BACKEND_URL}/api/sec/insider/${encodeURIComponent(symbol)}?limit=25&days=180`);
+      if (!response.ok) {
+        throw new Error(`SEC request failed with status ${response.status}`);
+      }
       const data = await response.json();
-      setFilings(data.filings || []);
+      const nextFilings = Array.isArray(data.filings) ? data.filings : [];
+      setFilings(nextFilings);
+      setMessage(nextFilings.length
+        ? `${nextFilings.length} Form 4 filings found for ${symbol} in the last 180 days.`
+        : `No SEC Form 4 filings found for ${symbol} in the last 180 days. SEC EDGAR only covers SEC-reporting companies.`);
     } catch (error) {
       setFilings([]);
+      setMessage('SEC EDGAR search failed. Try again in a moment or verify the ticker symbol.');
     } finally {
       setLoading(false);
     }
   };
+
   return (
     <section className="ti-panel ti-insider">
       <header className="ti-panel-header"><em>Insider Trading Feed</em><span>SEC EDGAR FORM 4 · LAST 180 DAYS</span></header>
       <div className="ti-inline-form ti-insider-form">
         <input placeholder="ENTER TICKER SYMBOL (E.G. AAPL)" value={ticker} onChange={(event) => setTicker(event.target.value.toUpperCase())} onKeyDown={(event) => event.key === 'Enter' && load()} />
-        <button onClick={load}>{loading ? 'LOADING…' : 'SEARCH SEC'}</button>
+        <button onClick={load} disabled={loading}>{loading ? 'LOADING...' : 'SEARCH SEC'}</button>
       </div>
-      <div className="ti-empty-area">{filings.length ? `${filings.length} insider filings found for ${ticker}.` : 'Search any ticker to see Form 4 insider transaction filings from the SEC'}</div>
+      <div className={filings.length ? 'ti-insider-results' : 'ti-empty-area'}>
+        {filings.length ? (
+          <>
+            <div className="ti-insider-summary">{message}</div>
+            <div className="ti-insider-list">
+              {filings.map((filing) => (
+                <a
+                  className="ti-insider-row"
+                  href={filing.filing_url || filing.document_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  key={`${filing.accession_number}-${filing.filing_date}`}
+                >
+                  <span className="ti-insider-date">{filing.filing_date || 'UNKNOWN DATE'}</span>
+                  <span className="ti-insider-company">{filing.company_name || searchedTicker}</span>
+                  <span className="ti-insider-formtype">FORM {filing.form_type || '4'}</span>
+                  <span className="ti-insider-accession">{filing.accession_number || 'SEC FILING'}</span>
+                </a>
+              ))}
+            </div>
+          </>
+        ) : loading ? 'Searching SEC EDGAR...' : message}
+      </div>
     </section>
   );
 }

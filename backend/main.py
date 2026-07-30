@@ -2911,7 +2911,7 @@ def get_recent_8k_filings(limit: int = 50):
     }
 
 @app.get("/api/sec/insider/{company}")
-def get_insider_trading_filings(company: str, limit: int = 20):
+def get_insider_trading_filings(company: str, limit: int = 20, days: int = 180):
     """
     Get Form 4 insider trading filings for a company
 
@@ -2920,14 +2920,16 @@ def get_insider_trading_filings(company: str, limit: int = 20):
     Args:
         company: Company name or ticker
         limit: Max results
+        days: Lookback window in days
 
     Returns:
         List of Form 4 filings
     """
     from services.sec_edgar_service import sec_edgar_service
-    filings = sec_edgar_service.get_insider_trading_filings(company, limit)
+    filings = sec_edgar_service.get_insider_trading_filings(company, limit, days)
     return {
         "company": company,
+        "days": days,
         "total_filings": len(filings),
         "filings": filings
     }
