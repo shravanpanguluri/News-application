@@ -3,6 +3,7 @@
  * Transforms external news headlines and descriptions into original Predovex Intelligence content
  * All content is rewritten to appear as original analysis from Predovex Intelligence Bureau
  */
+import { sanitizeArticleText } from './textSanitizer';
 
 // Categories and their focus areas for headline generation
 const CATEGORY_TEMPLATES = {
@@ -70,6 +71,7 @@ const CATEGORY_TEMPLATES = {
 
 // Extract key topics from original headline
 function extractTopics(headline) {
+  headline = sanitizeArticleText(headline);
   const topics = [];
   
   // Remove common words and extract meaningful terms
@@ -100,6 +102,7 @@ function extractTopics(headline) {
 
 // Rewrite headline to sound like original Predovex analysis
 function rewriteHeadline(originalHeadline, category = 'general') {
+  originalHeadline = sanitizeArticleText(originalHeadline);
   if (!originalHeadline) return "Predovex Intelligence Brief";
   
   const topic = extractTopics(originalHeadline);
@@ -123,6 +126,7 @@ function rewriteHeadline(originalHeadline, category = 'general') {
 
 // Rewrite description to sound like original analysis
 function rewriteDescription(originalDescription, headline) {
+  originalDescription = sanitizeArticleText(originalDescription);
   if (!originalDescription) {
     return "Predovex Intelligence Bureau continues to monitor this developing situation. Our analysts are tracking key indicators and will provide strategic assessments as more information becomes available.";
   }
@@ -146,7 +150,7 @@ function rewriteDescription(originalDescription, headline) {
     .replace(/reportedly/gi, 'intelligence suggests')
     .replace(/allegedly/gi, 'indicators point to');
   
-  return intro + cleaned;
+  return sanitizeArticleText(intro + cleaned);
 }
 
 // Generate Predovex source attribution

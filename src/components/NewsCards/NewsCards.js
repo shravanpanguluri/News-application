@@ -1,6 +1,7 @@
 import React, { useState, useEffect, memo } from 'react';
 import { Pagination, Label, Icon } from 'semantic-ui-react';
 import NewsCardSkeleton from './NewsCardSkeleton';
+import { sanitizeArticleText } from '../../utils/textSanitizer';
 import './NewsCards.css';
 
 function hapticLight() {
@@ -199,6 +200,15 @@ export default memo(function NewsCards(props) {
 			<div className="news-grid">
 				{currentArticles && currentArticles.length > 0
 					? currentArticles.map((article, idx) => (
+						(() => {
+							var title = sanitizeArticleText(article.title, 'Untitled');
+							var description = sanitizeArticleText(article.description);
+							var sourceValue = article.source && typeof article.source === 'object' ? article.source.name : article.source;
+							var source = sanitizeArticleText(article.sourceLabel || sourceValue, 'Predovex Intelligence');
+							var tldrKey = article.url || article.title;
+							var tldr = sanitizeArticleText(tldrMap[tldrKey]);
+
+							return (
 						<div
 							key={idx}
 							className="news-card-wrapper"
@@ -209,7 +219,7 @@ export default memo(function NewsCards(props) {
 								{article.image || article.urlToImage ? (
 									<img
 										src={article.image || article.urlToImage}
-										alt={article.title}
+										alt={title}
 										style={{ width: '100%', height: '180px', objectFit: 'cover' }}
 										loading="lazy"  // Native lazy loading
 										decoding="async"  // Async decoding for better performance
@@ -288,28 +298,28 @@ export default memo(function NewsCards(props) {
 								        )}
 								        
 								        <h3 className="news-card-title">
-								              {article.title && article.title.length > 55
-								              ? article.title.substr(0, 55) + '...'
-								              : article.title || 'Untitled'}
+								              {title.length > 55
+								              ? title.substr(0, 55) + '...'
+								              : title}
 								        </h3>
 
-								{article.description && !tldrMap[article.url || article.title] && (
+								{description && !tldr && (
 									<p className="news-card-description">
-										{article.description.length > 95
-											? article.description.substr(0, 95) + '...'
-											: article.description}
+										{description.length > 95
+											? description.substr(0, 95) + '...'
+											: description}
 									</p>
 								)}
-								{tldrMap[article.url || article.title] && (
+								{tldr && (
 									<p className="news-card-tldr">
 										<span className="news-card-tldr-badge">TLDR</span>
-										{tldrMap[article.url || article.title]}
+										{tldr}
 									</p>
 								)}
 								<div className="news-card-meta">
 									<span className="news-card-source">
 										<Icon name="shield" color="red" size="small" />
-										{article.sourceLabel || article.source || 'Predovex Intelligence'}
+										{source}
 									</span>
 									<span className="news-card-date">
 										{safeFormatDate(article.published_at || article.publishedAt)}
@@ -330,6 +340,8 @@ export default memo(function NewsCards(props) {
 								</div>
 							</div>
 						</div>
+							);
+						})()
 					))
 					: <p style={{ textAlign: 'center', gridColumn: '1/-1', color: '#666' }}>No articles available</p>
 				}

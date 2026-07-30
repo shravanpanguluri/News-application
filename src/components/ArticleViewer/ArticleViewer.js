@@ -1,8 +1,16 @@
 import React from 'react';
 import { Modal, Header, Image, Button, Icon, Segment, Divider } from 'semantic-ui-react';
+import { sanitizeArticleText } from '../../utils/textSanitizer';
 
 const ArticleViewer = ({ article, open, onClose }) => {
 	if (!article) return null;
+	const title = sanitizeArticleText(article.title, 'Untitled');
+	const source = sanitizeArticleText(
+		article.source && typeof article.source === 'object' ? article.source.name : article.source,
+		'Unknown'
+	);
+	const summary = sanitizeArticleText(article.ai_summary);
+	const description = sanitizeArticleText(article.description);
 
 	const safeFormatDate = (dateVal) => {
 		if (!dateVal) return 'Recently';
@@ -17,7 +25,7 @@ const ArticleViewer = ({ article, open, onClose }) => {
 	return (
 		<Modal open={open} onClose={onClose} size="large" closeIcon centered={false}>
 			<Modal.Header>
-				{article.title}
+				{title}
 			</Modal.Header>
 			<Modal.Content scrolling>
 				{(article.image || article.urlToImage) && (
@@ -37,27 +45,27 @@ const ArticleViewer = ({ article, open, onClose }) => {
 
 				<Segment secondary>
 					<Header as="h4" style={{ marginBottom: '10px' }}>
-						<Icon name="newspaper" /> Source: {article.source && typeof article.source === 'object' ? article.source.name : article.source || 'Unknown'}
+						<Icon name="newspaper" /> Source: {source}
 					</Header>
 					<p style={{ color: '#666', marginBottom: '0' }}>
 						<Icon name="calendar" /> Published: {safeFormatDate(article.published_at || article.publishedAt)}
 					</p>
 				</Segment>
 
-				{article.ai_summary && (
+				{summary && (
 					<Segment color="blue" style={{ background: '#f0f7ff' }}>
 						<Header as="h3">
 							<Icon name="lightbulb" color="yellow" />
-							GovPulse Smart Summary
+							Predovex Smart Summary
 						</Header>
-						<p style={{ fontSize: '1.1rem', fontStyle: 'italic', lineHeight: '1.6' }}>{article.ai_summary}</p>
+						<p style={{ fontSize: '1.1rem', fontStyle: 'italic', lineHeight: '1.6' }}>{summary}</p>
 					</Segment>
 				)}
 
-				{article.description && (
+				{description && (
 					<div style={{ marginBottom: '20px' }}>
 						<Header as="h3" color="blue">Description</Header>
-						<p style={{ lineHeight: '1.8', fontSize: '16px' }}>{article.description}</p>
+						<p style={{ lineHeight: '1.8', fontSize: '16px' }}>{description}</p>
 					</div>
 				)}
 
