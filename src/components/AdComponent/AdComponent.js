@@ -18,7 +18,7 @@ const ADS_CONTENT = {
         color: "linear-gradient(135deg, #ff9900 0%, #232f3e 100%)"
     },
     interstitial: {
-        title: "Unlock GovPulse PRO",
+        title: "Unlock Predovex PRO",
         subtitle: "Get unlimited API access, real-time alerts, and deep-dive policy analytics.",
         cta: "Upgrade to Pro",
         icon: "star",

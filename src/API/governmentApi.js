@@ -8,14 +8,14 @@ const getBackendUrl = () => {
 	const nativeCapacitor = window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform();
 	if (nativeCapacitor) {
 		// A phone's localhost is the phone itself, not the development Mac.
-		return 'https://govpulse-application.onrender.com';
+		return 'https://predovex-application.onrender.com';
 	}
 	if (hostname === 'localhost' || hostname === '127.0.0.1') {
 		// Local FastAPI backend
 		return 'http://127.0.0.1:8000';
 	}
 	
-	return 'https://govpulse-application.onrender.com';
+	return 'https://predovex-application.onrender.com';
 };
 
 export const BACKEND_URL = getBackendUrl();

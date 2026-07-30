@@ -72,9 +72,9 @@ const LoginModal = ({ open, onClose, onLoginSuccess }) => {
 					<Message info>
 						<Message.Header>Test Accounts (Pass: password123)</Message.Header>
 						<div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '5px' }}>
-							<Label size="small" color="blue">admin@govpulse.com (Enterprise)</Label>
-							<Label size="small" color="green">user@govpulse.com (Pro)</Label>
-							<Label size="small">free@govpulse.com (Free)</Label>
+						<Label size="small" color="blue">admin@predovex.com (Enterprise)</Label>
+						<Label size="small" color="green">user@predovex.com (Pro)</Label>
+						<Label size="small">free@predovex.com (Free)</Label>
 						</div>
 					</Message>
 				</Form>

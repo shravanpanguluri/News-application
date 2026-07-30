@@ -59,7 +59,7 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 				<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 					<span>
 						<Icon name="shield" color="red" />
-						GOVPULSE INTELLIGENCE REPORT [CONFIDENTIAL]
+						PREDOVEX INTELLIGENCE REPORT [CONFIDENTIAL]
 					</span>
 					<Label color="red" basic={!isDarkMode} inverted={isDarkMode}>LIVE ANALYSIS</Label>
 				</div>
@@ -106,7 +106,7 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 								</span>
 							)}
 							<span style={{ marginLeft: 'auto', color: isDarkMode ? '#5a7a8f' : '#94a3b8', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-								<Icon name="shield alternate" size="small" /> GovPulse Portal View
+								<Icon name="shield alternate" size="small" /> Predovex Portal View
 							</span>
 						</div>
 
@@ -338,7 +338,7 @@ const ArticleReader = ({ article, open, onClose, allArticles }) => {
 
 						<div style={{ marginTop: '40px', textAlign: 'center', opacity: 0.5 }}>
 							<Divider inverted={isDarkMode} />
-							<p style={{ color: isDarkMode ? '#888' : 'inherit' }}>PREPARED PROACTIVELY BY GOVPULSE ANALYSIS BUREAU</p>
+							<p style={{ color: isDarkMode ? '#888' : 'inherit' }}>PREPARED PROACTIVELY BY PREDOVEX ANALYSIS BUREAU</p>
 							<Button 
 								basic 
 								inverted={isDarkMode}

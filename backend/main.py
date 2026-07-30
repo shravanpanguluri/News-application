@@ -1,5 +1,5 @@
 """
-Main FastAPI Application - GovPulse Intelligence Platform
+Main FastAPI Application - Predovex Intelligence Platform
 """
 from fastapi import FastAPI, HTTPException, Depends, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -90,7 +90,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # App initialization
 app = FastAPI(
-    title="GovPulse API",
+	title="Predovex API",
     description="Aggregates government and market intelligence",
     version="1.0.0"
 )
@@ -226,9 +226,9 @@ async def startup_event():
     try:
         db = SessionLocal()
         test_users = [
-            {"email": "admin@govpulse.com", "password": "password123", "tier": "enterprise"},
-            {"email": "user@govpulse.com", "password": "password123", "tier": "pro"},
-            {"email": "free@govpulse.com", "password": "password123", "tier": "free"}
+			{"email": "admin@predovex.com", "password": "password123", "tier": "enterprise"},
+			{"email": "user@predovex.com", "password": "password123", "tier": "pro"},
+			{"email": "free@predovex.com", "password": "password123", "tier": "free"}
         ]
         for u in test_users:
             existing = db.query(db_models.User).filter(db_models.User.email == u["email"]).first()
@@ -245,7 +245,7 @@ async def startup_event():
     except Exception as e:
         print(f"Startup warning: {e}")
     
-    print("✅ GovPulse Backend Started Successfully!")
+	print("✅ Predovex Backend Started Successfully!")
     print("📡 API Docs: http://localhost:8000/docs")
     print("🏥 Health: http://localhost:8000/health")
 
@@ -268,7 +268,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
 # Endpoints
 @app.get("/")
 def read_root():
-    return {"message": "GovPulse Intelligence API active"}
+	return {"message": "Predovex Intelligence API active"}
 
 @app.post("/auth/register")
 def register(user_data: UserCreate, db: Session = Depends(get_db)):

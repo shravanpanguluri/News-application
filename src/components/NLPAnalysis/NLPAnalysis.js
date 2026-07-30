@@ -214,7 +214,7 @@ const ArticleCard = ({ article, onSelect }) => {
           </span>
           <span className="source">
             <Icon name="shield" color="red" />
-            GOVPULSE INTELLIGENCE BUREAU
+            PREDOVEX INTELLIGENCE BUREAU
           </span>
         </Card.Meta>
 

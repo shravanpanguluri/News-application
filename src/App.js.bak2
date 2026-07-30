@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
-import './predovex.css';
 // // import API from './API/api'; // DISABLED - NewsAPI CORS  // DISABLED - NewsAPI CORS issues on free plan
-import { articlesAPI, authAPI, rssAPI, sentimentAPI } from './API/governmentApi';
+import { articlesAPI, authAPI, rssAPI } from './API/governmentApi';
 import { transformArticles } from './utils/contentRewriter';
 // Lazy load AI utilities - only import when needed for performance
 import NewsCards from './components/NewsCards/NewsCards';
@@ -24,7 +23,6 @@ import GovShorts from './components/GovShorts/GovShorts';
 import EconomicCalendar from './components/EconomicCalendar/EconomicCalendar';
 import StockSentimentDashboard from './components/StockSentimentDashboard/StockSentimentDashboard';
 import DeepAnalysisDashboard from './components/DeepAnalysisDashboard';
-import TradingIntelligenceDashboard from './components/TradingIntelligenceDashboard';
 import PatentEvidenceDashboard from './components/PatentEvidenceDashboard';
 import DefenseContracts from './components/DefenseContracts/DefenseContracts';
 import TrendingPredictions from './components/TrendingPredictions/TrendingPredictions';
@@ -46,6 +44,7 @@ import {
 	Accordion,
 	Message,
 } from 'semantic-ui-react';
+import HeaderComponent from './components/HeaderComponent';
 import LoaderComponent from './components/Loader/LoaderComponent';
 import SearchComponent from './components/Search/SearchComponent';
 import SearchedResult from './components/SearchedResult/SearchedResult';
@@ -94,7 +93,7 @@ function App() {
 		articlesReadThisSession: 0,
 		showInterstitial: false,
 		mobileMenuOpen: false,
-	bookmarks: (function() { try { return JSON.parse(localStorage.getItem('predovex_bookmarks') || '[]'); } catch(e) { return []; } })(),
+		bookmarks: (function() { try { return JSON.parse(localStorage.getItem('predovex_bookmarks') || '[]'); } catch(e) { return []; } })(),
 		watchlistKeywords: [],
 		watchlistNews: [],
 		newWatchlistKeyword: '',
@@ -118,7 +117,6 @@ function App() {
 		topicModelLoaded: false,
 		// Sentiment Trends
 		sentimentTrends: {}
-		,sectorSentiment: {}
 	});
 
 	// Initialize Semantic Search
@@ -226,18 +224,9 @@ function App() {
 		loadTrendingTopics();
 		loadWatchlistNews();
 		loadMarketPrices();
-		loadSectorSentiment();
 		getNewsSources();
 		
 		return () => {};
-	}, []);
-
-	// Keep the sector heatmap tied to the backend market-sentiment service.
-	// The endpoint uses the same market snapshot as the ticker and is refreshed
-	// independently of the article feed.
-	useEffect(() => {
-		const interval = setInterval(loadSectorSentiment, 5 * 60 * 1000);
-		return () => clearInterval(interval);
 	}, []);
 
 	// Auto-refresh main news every 30 minutes (resets when category/country changes)
@@ -451,12 +440,7 @@ function App() {
 		}
 	};
 
-	const handleSearchChange = (event, semanticData) => {
-		const value = semanticData && typeof semanticData.value !== 'undefined'
-			? semanticData.value
-			: event && event.target
-				? event.target.value
-				: '';
+	const handleSearchChange = (e, { value }) => {
 		updateData('value', value);
 		setSemanticQuery(value);
 	};
@@ -510,45 +494,14 @@ function App() {
 		};
 	};
 
-	const loadSectorSentiment = async () => {
-		try {
-			const response = await sentimentAPI.getAllSectorsSentiment();
-			const sectors = response && response.sectors ? response.sectors : response;
-			if (sectors && typeof sectors === 'object' && Object.keys(sectors).length > 0) {
-				setData(prev => ({ ...prev, sectorSentiment: sectors }));
-			}
-		} catch (error) {
-			console.warn('Sector sentiment refresh failed:', error.message || error);
-		}
-	};
-
 	const getSentimentHeatmap = () => {
 		const categories = ['general', 'markets', 'economy', 'technology', 'policy', 'health', 'finance'];
 		const heatmap = {};
 		
 		categories.forEach(cat => {
 			const catArticles = (data.articles || []).filter(a => a.category === cat);
-			const liveSector = {
-				technology: data.sectorSentiment?.Technology || data.sectorSentiment?.technology,
-				health: data.sectorSentiment?.Healthcare || data.sectorSentiment?.healthcare,
-				finance: data.sectorSentiment?.Finance || data.sectorSentiment?.finance,
-				economy: data.sectorSentiment?.Energy || data.sectorSentiment?.energy,
-				policy: data.sectorSentiment?.Defense || data.sectorSentiment?.defense,
-				general: data.sectorSentiment?.Consumer || data.sectorSentiment?.consumer,
-			}[cat];
-			const liveCount = liveSector && Number(liveSector.stocks_analyzed || (liveSector.predictions && liveSector.predictions.length) || 0);
-			if (liveSector && liveCount > 0) {
-				const score = Math.round(Number(liveSector.avg_probability || 0.5) * 100);
-				heatmap[cat] = {
-					score,
-					label: liveSector.sentiment || 'Neutral',
-					color: score > 60 ? 'green' : score < 40 ? 'red' : 'grey',
-					count: liveCount,
-				};
-				return;
-			}
 			if (catArticles.length === 0) {
-				heatmap[cat] = { score: 50, label: 'Neutral', color: 'grey', count: 0 };
+				heatmap[cat] = { score: 50, label: 'Neutral', color: 'grey' };
 				return;
 			}
 			
@@ -856,7 +809,7 @@ function App() {
 			),
 			render: () => (
 				<Tab.Pane>
-					<ImpactTrends articles={data.articles} />
+					<ImpactTrends />
 				</Tab.Pane>
 			),
 		},
@@ -920,7 +873,7 @@ function App() {
 					Markets
 				</>
 			),
-				render: () => (
+			render: () => (
 				<Tab.Pane>
 					<MarketTicker />
 					<StockSentimentDashboard marketPrices={data.marketPrices} />
@@ -1307,19 +1260,6 @@ function App() {
 				</Tab.Pane>
 			),
 		},
-		{
-			menuItem: (
-				<>
-					<Icon name="line chart" color="green" />
-					Trading Intelligence
-				</>
-			),
-			render: () => (
-				<Tab.Pane>
-					<TradingIntelligenceDashboard />
-				</Tab.Pane>
-			),
-		},
 	];
 
 	const renderGovernmentNews = () => {
@@ -1367,59 +1307,103 @@ function App() {
 		localStorage.setItem('darkMode', newMode);
 	};
 
+	const todayLabel = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
 	return (
-		<div className={`gp-root ${data.isDarkMode ? 'dark-mode' : ''}`} data-theme={data.isDarkMode ? 'dark' : 'light'}>
-			<Container fluid style={{ minHeight: '100vh', background: 'var(--bg-color)', padding: 0 }}>
-				<header className="gp-mast">
-					<div className="gp-mast-left">
-						<span>VOL. XIV</span><span className="gp-mast-sep">·</span>
-						<span>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span>
-						{data.hasPremium && <><span className="gp-mast-sep">·</span><span style={{ color: 'var(--gp-accent)' }}>PREMIUM</span></>}
-					</div>
-					<div>
-						<h1 className="gp-mast-title">Pre<em>dovex</em></h1>
-						<div className="gp-mast-sub">Markets · Intelligence · Policy · Defense · Established 2024</div>
-					</div>
-					<div className="gp-mast-right">
-						{data.isLoggedIn ? (
-							<button className="gp-acct-chip" onClick={handleLogout} title="Click to logout">
-								<span className="gp-acct-dot" /><span className="gp-acct-name">{data.userTier.toUpperCase()}</span>
-							</button>
-						) : (
-							<button className="gp-acct-btn" onClick={() => setData(prev => ({ ...prev, showLoginModal: true }))}>SIGN IN</button>
-						)}
-						<button className="gp-theme-btn" onClick={toggleDarkMode} title={data.isDarkMode ? 'Light mode' : 'Dark mode'}>
-							{data.isDarkMode ? '☀' : '☾'}
+		<div
+			className="gp-root"
+			data-theme={data.isDarkMode ? 'dark' : 'light'}
+		>
+			{/* ════════════════════════════════════════
+			    Predovex Masthead — 3-column editorial header
+			    ════════════════════════════════════════ */}
+			<header className="gp-mast">
+				{/* Left — date + edition */}
+				<div className="gp-mast-left">
+					<span>{todayLabel}</span>
+					<span className="gp-mast-sep">·</span>
+					<span>GOV INTELLIGENCE</span>
+					{data.hasPremium && (
+						<>
+							<span className="gp-mast-sep">·</span>
+							<span style={{ color: 'var(--gp-accent)', fontWeight: 600 }}>PREMIUM</span>
+						</>
+					)}
+				</div>
+
+				{/* Center — big serif title */}
+				<div>
+					<h1 className="gp-mast-title">Gov<em>Pulse</em></h1>
+					<p className="gp-mast-sub">Markets · Intelligence · Policy · Defense</p>
+				</div>
+
+				{/* Right — account chip + dark mode */}
+				<div className="gp-mast-right">
+					{data.isLoggedIn ? (
+						<button
+							className="gp-acct-chip"
+							onClick={handleLogout}
+							title="Click to logout"
+						>
+							<span className="gp-acct-dot"></span>
+							<span className="gp-acct-name">{data.userEmail || 'USER'}</span>
+							<span className="gp-acct-tier">{data.userTier.toUpperCase()}</span>
 						</button>
-					</div>
-				</header>
-				<MarketTicker />
-				<nav className="gp-nav reference-nav">
-					{[
-						['FRONT PAGE', 0], ['NEWS', 8], ['INTELLIGENCE', 2], ['MARKETS', 6],
-						['DEFENSE', 4], ['ACCOUNT', 12], ['PORTFOLIO', 11], ['TRADING INTEL', 15]
-					].map(([label, index]) => (
-						<button key={label} className={data.activeTab === index ? 'active' : ''} onClick={() => setData(prev => ({ ...prev, activeTab: index }))}>{label}</button>
-					))}
-					<div className="gp-nav-spacer" />
-					<div className="gp-search">
-						<Icon name="search" className="ico" />
-						<input value={data.value} onChange={handleSearchChange} placeholder="" aria-label="Search" />
-					</div>
-				</nav>
+					) : (
+						<button
+							className="gp-acct-btn"
+							onClick={function() { setData(function(p) { return Object.assign({}, p, { showLoginModal: true }); }); }}
+						>
+							Sign In
+						</button>
+					)}
+					<button
+						className="gp-acct-btn"
+						onClick={toggleDarkMode}
+						title={data.isDarkMode ? 'Light mode' : 'Dark mode'}
+						style={{ padding: '5px 8px' }}
+					>
+						{data.isDarkMode ? '☀' : '☾'}
+					</button>
+				</div>
+			</header>
 
-			<Container style={{ marginTop: '20px', marginBottom: '40px' }}>
+			{/* ── Live Market Ticker ── */}
+			<MarketTicker />
 
-				{/* Intelligence Dashboard */}
-				<div className="intel-dashboard">
+			{/* ════════════════════════════════════════
+			    Section navigation
+			    ════════════════════════════════════════ */}
+			<nav className="gp-nav" style={{ position: 'sticky', top: 0, zIndex: 200 }}>
+				{panes.map(function(pane, index) {
+					return (
+						<button
+							key={index}
+							className={data.activeTab === index ? 'active' : ''}
+							onClick={function() {
+								setData(function(p) { return Object.assign({}, p, { activeTab: index, mobileMenuOpen: false }); });
+							}}
+						>
+							{pane.menuItem}
+						</button>
+					);
+				})}
+				<span className="gp-nav-spacer" />
+			</nav>
 
-					{/* ── Row 1: Stats Circles (always horizontal) ─────────────── */}
+			{/* ════════════════════════════════════════
+			    Main content
+			    ════════════════════════════════════════ */}
+			<div className="gp-content-shell">
+
+				{/* ── Intelligence stats + sector heatmap ── */}
+				<div className="intel-dashboard" style={{ marginBottom: '24px' }}>
 					<div className="intel-stats-row">
 						<div
 							className="intel-stat-card intel-stat-card--red"
-							onClick={() => handleFilterClick('high-impact')}
+							onClick={function() { handleFilterClick('high-impact'); }}
 							style={{ cursor: 'pointer' }}
-							title="Click to view High Impact articles"
+							title="View High Impact articles"
 						>
 							<div className="intel-stat-circle" style={{ borderColor: '#c8102e' }}>
 								<span className="intel-stat-value" style={{ color: '#c8102e' }}>{stats.highImpact}</span>
@@ -1428,9 +1412,9 @@ function App() {
 						</div>
 						<div
 							className="intel-stat-card intel-stat-card--green"
-							onClick={() => handleFilterClick('positive')}
+							onClick={function() { handleFilterClick('positive'); }}
 							style={{ cursor: 'pointer' }}
-							title="Click to view Positive sentiment articles"
+							title="View Positive sentiment articles"
 						>
 							<div className="intel-stat-circle" style={{ borderColor: '#007f3b' }}>
 								<span className="intel-stat-value" style={{ color: '#007f3b' }}>{stats.positive}</span>
@@ -1439,9 +1423,9 @@ function App() {
 						</div>
 						<div
 							className="intel-stat-card intel-stat-card--blue"
-							onClick={() => handleFilterClick('clear')}
+							onClick={function() { handleFilterClick('clear'); }}
 							style={{ cursor: 'pointer' }}
-							title="Click to view all articles"
+							title="View all articles"
 						>
 							<div className="intel-stat-circle" style={{ borderColor: '#00a3e0' }}>
 								<span className="intel-stat-value" style={{ color: '#00a3e0' }}>{stats.total}</span>
@@ -1450,7 +1434,6 @@ function App() {
 						</div>
 					</div>
 
-					{/* ── Row 3: Sector Sentiment Heatmap (full width) ──────────── */}
 					<div className="heatmap-segment">
 						<div className="heatmap-header">
 							<span className="heatmap-header-title">
@@ -1458,45 +1441,59 @@ function App() {
 							</span>
 							<span className="heatmap-header-sub">click a tile to filter news</span>
 						</div>
-						<div className="heatmap-grid">
-							{Object.keys(heatmap).map(cat => {
-								const item = heatmap[cat];
-								const meta = CATEGORY_META[cat] || { emoji: '📰', accent: '#607d8b', label: cat };
-								const noData = !item.count;
-								const isActive = data.currentCategory === cat;
-
-										const sentimentLabel = noData ? 'NO DATA' : item.label.toUpperCase();
-
+						<div className="heatmap-scroll-container">
+							{Object.keys(heatmap).map(function(cat) {
+								var item = heatmap[cat];
+								var meta = CATEGORY_META[cat] || { emoji: '📰', accent: '#607d8b', label: cat };
+								var noData = !item.count;
+								var isActive = data.currentCategory === cat;
+								var bg;
+								if (noData) {
+									bg = 'linear-gradient(145deg, ' + meta.accent + 'ee, ' + meta.accent + '99)';
+								} else if (item.score > 60) {
+									var a1 = Math.min(0.95, 0.65 + ((item.score - 60) / 40) * 0.3);
+									bg = 'linear-gradient(145deg, rgba(39,174,96,' + a1 + '), rgba(30,132,73,' + a1 + '))';
+								} else if (item.score < 40) {
+									var a2 = Math.min(0.95, 0.65 + ((40 - item.score) / 40) * 0.3);
+									bg = 'linear-gradient(145deg, rgba(231,76,60,' + a2 + '), rgba(192,57,43,' + a2 + '))';
+								} else {
+									bg = 'linear-gradient(145deg, ' + meta.accent + 'cc, ' + meta.accent + '88)';
+								}
+								var arrow = item.score > 60 ? '▲' : item.score < 40 ? '▼' : '—';
+								var sentimentLabel = noData ? 'NO DATA' : item.label.toUpperCase();
 								return (
-									<button
+									<div
 										key={cat}
-										className={`heatmap-tile ${isActive ? 'active' : ''} ${noData ? 'nodata' : item.score > 60 ? 'up' : item.score < 40 ? 'dn' : ''}`}
-										onClick={() => {
-											setData(prev => ({ ...prev, currentCategory: cat, activeTab: 2 }));
-											loadRSSNews(cat, data.currentCountry);
+										className={'heatmap-tile' + (isActive ? ' heatmap-tile--active' : '') + (noData ? ' heatmap-tile--nodata' : '')}
+										onClick={function(c) { return function() {
+											setData(function(p) { return Object.assign({}, p, { currentCategory: c, activeTab: 2 }); });
+											loadRSSNews(c, data.currentCountry);
+										}; }(cat)}
+										style={{
+											background: bg,
+											boxShadow: isActive
+												? '0 0 0 3px white, 0 8px 20px ' + meta.accent + '66'
+												: '0 4px 14px ' + meta.accent + '44',
 										}}
 									>
-										<div className="heatmap-tile__top">
-											<span className="heatmap-tile__emoji">{meta.emoji}</span>
-											<span className="heatmap-tile__n">{item.count || '—'}</span>
+										<div className="heatmap-tile__toprow">
+											<span className="heatmap-tile__icon">{meta.emoji}</span>
+											<span className="heatmap-tile__count">{item.count || '—'}</span>
 										</div>
 										<div className="heatmap-tile__cat">{meta.label}</div>
-										<div className="heatmap-tile__score">
-											{noData ? '—' : item.score}
-											<span className="heatmap-tile__unit">/100</span>
+										<div className="heatmap-tile__score">{noData ? '--' : item.score + '%'}</div>
+										<div className="heatmap-tile__sentiment">
+											<span className="heatmap-tile__arrow">{arrow}</span> {sentimentLabel}
 										</div>
-										<div className="heatmap-tile__sent">
-											{sentimentLabel}
-										</div>
-									</button>
+									</div>
 								);
 							})}
 						</div>
 					</div>
-
 				</div>
 
-				<Grid className="dashboard-controls" columns={2} stackable mobile={1} style={{ marginBottom: '20px' }}>
+				{/* ── Search + AI features ── */}
+				<Grid columns={2} stackable style={{ marginBottom: '16px' }}>
 					<Grid.Row>
 						<Grid.Column width={8}>
 							<SearchComponent
@@ -1515,139 +1512,80 @@ function App() {
 							)}
 						</Grid.Column>
 					</Grid.Row>
-					
-					{/* AI Features Toggle Row */}
-					<Grid.Row style={{ paddingTop: '10px' }}>
+					<Grid.Row style={{ paddingTop: '8px' }}>
 						<Grid.Column width={16}>
-							<Segment secondary style={{ padding: '10px', background: data.isDarkMode ? 'rgba(255,255,255,0.05)' : '#f8f9fa' }}>
-								<div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-									<Label color="purple" size="small">
-										<Icon name="lightbulb outline" /> AI Features
+							<div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', padding: '8px 0' }}>
+								<Label color="purple" size="small">
+									<Icon name="lightbulb outline" /> AI Features
+								</Label>
+								<Button
+									size="small"
+									toggle
+									active={data.enableDeduplication}
+									onClick={function() { setData(function(p) { return Object.assign({}, p, { enableDeduplication: !p.enableDeduplication }); }); }}
+									title="Remove duplicate articles from different sources"
+								>
+									<Icon name="copy outline" /> Remove Duplicates
+								</Button>
+								<Button
+									size="small"
+									toggle
+									active={data.enableClustering}
+									onClick={function() { setData(function(p) { return Object.assign({}, p, { enableClustering: !p.enableClustering }); }); }}
+									title="Group similar articles together"
+								>
+									<Icon name="sitemap" /> Cluster Articles
+								</Button>
+								{(data.enableDeduplication || data.enableClustering) && (
+									<Label size="small" color="green">
+										<Icon name="check" /> AI Active
 									</Label>
-									<Button
-										size="small"
-										toggle
-										active={data.enableDeduplication}
-										onClick={() => setData(prev => ({ ...prev, enableDeduplication: !prev.enableDeduplication }))}
-										title="Remove duplicate articles from different sources"
-									>
-										<Icon name="copy outline" /> Remove Duplicates
-									</Button>
-									<Button
-										size="small"
-										toggle
-										active={data.enableClustering}
-										onClick={() => setData(prev => ({ ...prev, enableClustering: !prev.enableClustering }))}
-										title="Group similar articles together"
-									>
-										<Icon name="sitemap" /> Cluster Articles
-									</Button>
-									{(data.enableDeduplication || data.enableClustering) && (
-										<Label size="small" color="green">
-											<Icon name="check" /> AI Active
-										</Label>
-									)}
-								</div>
-							</Segment>
+								)}
+							</div>
 						</Grid.Column>
 					</Grid.Row>
 				</Grid>
 
-				{/* Main Content Tabs */}
-				<Segment style={{ marginTop: '20px', padding: 0, borderTop: '3px solid #003591' }}>
-					{/* Desktop Menu — scrollable when tabs overflow */}
-					<div className="desktop-only tab-nav-scroll">
-						<Menu secondary pointing style={{ flexWrap: 'nowrap' }}>
-							{panes.map((pane, index) => (
-								<Menu.Item
-									key={index}
-									name={index.toString()}
-									active={data.activeTab === index}
-									onClick={() => {
-										setData(prev => ({ ...prev, activeTab: index }));
-									}}
-								>
-									{pane.menuItem}
-								</Menu.Item>
-							))}
-						</Menu>
-					</div>
+				{/* ── Active tab content ── */}
+				<div style={{ marginTop: '8px' }}>
+					{panes[data.activeTab].render()}
+				</div>
+			</div>
 
-					{/* Mobile/Tablet Menu — hamburger */}
-					<div className="tablet-mobile-only">
-						<Menu secondary pointing style={{ marginBottom: 0 }}>
-							<Menu.Item header>
-								<Icon name="bars" onClick={() => setData(prev => ({ ...prev, mobileMenuOpen: !prev.mobileMenuOpen }))} />
-								{panes[data.activeTab].menuItem}
-							</Menu.Item>
-						</Menu>
-						
-						{data.mobileMenuOpen && (
-							<Menu vertical fluid secondary style={{ borderTop: '1px solid #eee' }}>
-								{panes.map((pane, index) => (
-									<Menu.Item
-										key={index}
-										name={index.toString()}
-										active={data.activeTab === index}
-										onClick={() => {
-											setData(prev => ({ ...prev, activeTab: index, mobileMenuOpen: false }));
-										}}
-									>
-										{pane.menuItem}
-									</Menu.Item>
-								))}
-							</Menu>
-						)}
-					</div>
-
-					
-					<div style={{ marginTop: '20px' }}>
-						{panes[data.activeTab].render()}
-					</div>
-				</Segment>
-			</Container>
-
-			{/* Modals */}
+			{/* ════════════════════════════════════════
+			    Modals
+			    ════════════════════════════════════════ */}
 			<LoginModal
 				open={data.showLoginModal}
-				onClose={() => setData(prev => ({ ...prev, showLoginModal: false }))}
-				onLoginSuccess={() => {
-					setData(prev => ({
-						...prev,
+				onClose={function() { setData(function(p) { return Object.assign({}, p, { showLoginModal: false }); }); }}
+				onLoginSuccess={function() {
+					setData(function(p) { return Object.assign({}, p, {
 						isLoggedIn: true,
 						userTier: localStorage.getItem('tier') || 'free',
 						dailyLimit: parseInt(localStorage.getItem('dailyLimit')) || 50,
-					}));
+					}); });
 					checkAuth();
 				}}
 			/>
-
 			<RemoveAdsModal
 				open={data.showRemoveAdsModal}
-				onClose={() => setData(prev => ({ ...prev, showRemoveAdsModal: false }))}
+				onClose={function() { setData(function(p) { return Object.assign({}, p, { showRemoveAdsModal: false }); }); }}
 				onSubscribe={handleRemoveAdsSubscribe}
 			/>
-
 			<ArticleReader
 				article={data.selectedArticleForReading}
 				open={data.articleReaderOpen}
 				allArticles={data.articles}
-				onClose={() => setData(prev => ({
-					...prev,
-					articleReaderOpen: false,
-					selectedArticleForReading: null
-				}))}
+				onClose={function() { setData(function(p) { return Object.assign({}, p, { articleReaderOpen: false, selectedArticleForReading: null }); }); }}
 			/>
-
 			{data.showInterstitial && (
-				<AdComponent 
-					type="interstitial" 
-					onClose={() => setData(prev => ({ ...prev, showInterstitial: false }))} 
+				<AdComponent
+					type="interstitial"
+					onClose={function() { setData(function(p) { return Object.assign({}, p, { showInterstitial: false }); }); }}
 				/>
 			)}
-			</Container>
-			</div>
-			);
+		</div>
+	);
 }
 
 export default App;

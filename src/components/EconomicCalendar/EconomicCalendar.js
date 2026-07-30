@@ -70,8 +70,8 @@ const DATA_SOURCES = {
     },
 };
 
-// GovPulse Insights for each event type
-const GOVPULSE_INSIGHTS = {
+// Predovex Insights for each event type
+const PREDOVEX_INSIGHTS = {
     'FOMC Meeting': {
         title: 'Federal Reserve Rate Decision',
         summary: 'The Federal Open Market Committee (FOMC) meets 8 times per year to set US interest rates.',
@@ -438,8 +438,8 @@ export default function EconomicCalendar() {
 
     function getInsight(title) {
         // Try exact match first, then partial match
-        return GOVPULSE_INSIGHTS[title] || 
-               Object.entries(GOVPULSE_INSIGHTS).find(([key]) => title.includes(key))?.[1] ||
+        return PREDOVEX_INSIGHTS[title] || 
+               Object.entries(PREDOVEX_INSIGHTS).find(([key]) => title.includes(key))?.[1] ||
                null;
     }
 
@@ -488,14 +488,14 @@ export default function EconomicCalendar() {
                     </div>
                 </div>
                 
-                {/* GovPulse Insights Panel */}
+                {/* Predovex Insights Panel */}
                 {isOpen && (insight || source) && (
                     <div className="econ-event-insights">
-                        {/* GovPulse Insight Section */}
+                        {/* Predovex Insight Section */}
                         {insight && (
                             <div>
                                 <Header as="h6" color="blue">
-                                    <Icon name="lightbulb" /> GovPulse Insight: {insight.title}
+                                    <Icon name="lightbulb" /> Predovex Insight: {insight.title}
                                 </Header>
                                 <p>
                                     {insight.summary}
@@ -566,7 +566,7 @@ export default function EconomicCalendar() {
                         )}
                         
                         <p className="disclaimer">
-                            <Icon name="info" /> GovPulse provides educational insights. Always verify with official sources.
+                            <Icon name="info" /> Predovex provides educational insights. Always verify with official sources.
                         </p>
                     </div>
                 )}

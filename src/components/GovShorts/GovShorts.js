@@ -124,7 +124,7 @@ const GovShorts = ({ articles = [], onArticleClick }) => {
                 <div className="short-meta">
                     <Label basic color="red">
                         <Icon name="shield" />
-                        GOVPULSE INTELLIGENCE
+                        PREDOVEX INTELLIGENCE
                     </Label>
                     <Label basic><Icon name="globe" /> {(article.country || 'Global').toUpperCase()}</Label>
                     <Label basic><Icon name="wait" /> 30s read</Label>
@@ -138,7 +138,7 @@ const GovShorts = ({ articles = [], onArticleClick }) => {
                 <div className="social-row">
                     <Button
                         circular color="twitter" icon="twitter"
-                        onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title + ' - via GovPulse Intelligence Platform')}`)}
+                        onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title + ' - via Predovex Intelligence Platform')}`)}
                     />
                     <Button
                         circular color="linkedin" icon="linkedin"
@@ -147,7 +147,7 @@ const GovShorts = ({ articles = [], onArticleClick }) => {
                     <Button
                         circular icon="share alternate"
                         onClick={() => {
-                            const shareUrl = `http://localhost:3000/article/${article.govPulseID || Math.random().toString(36).substring(7)}`;
+                            const shareUrl = `http://localhost:3000/article/${article.predovexID || Math.random().toString(36).substring(7)}`;
                             if (navigator.share) {
                                 navigator.share({ title: article.title, url: shareUrl })
                                     .catch(function() {});

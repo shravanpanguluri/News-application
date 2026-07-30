@@ -199,7 +199,7 @@ export function transformArticle(article) {
     isPredovexOriginal: true,
     
     // Add internal reference
-    govPulseID: generatePredovexID(),
+    predovexID: generatePredovexID(),
     
     // Keep URL for internal tracking but don't display
     internalTrackingUrl: article.url,
@@ -234,7 +234,7 @@ export function getDisplayArticle(article) {
     sentiment: article.sentiment,
     ai_summary: transformed.description,
     urlToImage: article.urlToImage,
-    govPulseID: transformed.govPulseID,
+    predovexID: transformed.predovexID,
     isPredovexOriginal: true,
   };
 }

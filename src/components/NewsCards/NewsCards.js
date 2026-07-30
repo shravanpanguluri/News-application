@@ -3,8 +3,24 @@ import { Pagination, Label, Icon } from 'semantic-ui-react';
 import NewsCardSkeleton from './NewsCardSkeleton';
 import './NewsCards.css';
 
-const STORAGE_KEY = 'govpulse_bookmarks';
-const AI_CACHE_KEY = 'govpulse_ai_cache';
+function hapticLight() {
+	try {
+		import('@capacitor/haptics').then(function(m) {
+			m.Haptics.impact({ style: m.ImpactStyle.Light }).catch(function() {});
+		}).catch(function() {});
+	} catch (e) {}
+}
+
+function hapticMedium() {
+	try {
+		import('@capacitor/haptics').then(function(m) {
+			m.Haptics.impact({ style: m.ImpactStyle.Medium }).catch(function() {});
+		}).catch(function() {});
+	} catch (e) {}
+}
+
+const STORAGE_KEY = 'predovex_bookmarks';
+const AI_CACHE_KEY = 'predovex_ai_cache';
 
 // AI Cache to avoid re-analyzing same articles
 function getAiCache() {
@@ -28,7 +44,33 @@ export default memo(function NewsCards(props) {
 	const [aiAnalysis, setAiAnalysis] = useState({});
 	const [aiLoading, setAiLoading] = useState(false);
 	const [aiFeaturesLoaded, setAiFeaturesLoaded] = useState(false);
+	const [tldrMap, setTldrMap] = useState({});
+	const [tldrLoading, setTldrLoading] = useState({});
 	const articlesPerPage = 9;
+
+	const handleTldr = async function(e, article) {
+		e.preventDefault();
+		e.stopPropagation();
+		var key = article.url || article.title;
+		if (tldrMap[key]) {
+			// toggle off
+			setTldrMap(function(prev) { var n = Object.assign({}, prev); delete n[key]; return n; });
+			return;
+		}
+		setTldrLoading(function(prev) { var n = Object.assign({}, prev); n[key] = true; return n; });
+		try {
+			var BACKEND_URL = (function() {
+				if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') return 'http://127.0.0.1:8000';
+				return 'https://predovex-application.onrender.com';
+			})();
+			var res = await fetch(BACKEND_URL + '/api/article/summarize?title=' + encodeURIComponent(article.title || '') + '&content=' + encodeURIComponent((article.description || '') + ' ' + (article.content || '')));
+			var data = await res.json();
+			if (data.summary) {
+				setTldrMap(function(prev) { var n = Object.assign({}, prev); n[key] = data.summary; return n; });
+			}
+		} catch (ex) {}
+		setTldrLoading(function(prev) { var n = Object.assign({}, prev); delete n[key]; return n; });
+	};
 
 	// Lazy load AI features only when needed (performance optimization)
 	useEffect(() => {
@@ -97,12 +139,14 @@ export default memo(function NewsCards(props) {
 
 	const handleCardClick = (e, article) => {
 		if (e) { e.preventDefault(); e.stopPropagation(); }
+		hapticLight();
 		if (props.onArticleClick) props.onArticleClick(article);
 	};
 
 	const toggleBookmark = (e, article) => {
 		e.preventDefault();
 		e.stopPropagation();
+		hapticMedium();
 		const isBookmarked = bookmarks.some(function(b) { return b.url === article.url; });
 		const updated = isBookmarked
 			? bookmarks.filter(function(b) { return b.url !== article.url; })
@@ -249,26 +293,40 @@ export default memo(function NewsCards(props) {
 								              : article.title || 'Untitled'}
 								        </h3>
 
-								{article.description && (
+								{article.description && !tldrMap[article.url || article.title] && (
 									<p className="news-card-description">
 										{article.description.length > 95
 											? article.description.substr(0, 95) + '...'
 											: article.description}
 									</p>
 								)}
+								{tldrMap[article.url || article.title] && (
+									<p className="news-card-tldr">
+										<span className="news-card-tldr-badge">TLDR</span>
+										{tldrMap[article.url || article.title]}
+									</p>
+								)}
 								<div className="news-card-meta">
 									<span className="news-card-source">
 										<Icon name="shield" color="red" size="small" />
-										{article.sourceLabel || article.source || 'GovPulse Intelligence'}
+										{article.sourceLabel || article.source || 'Predovex Intelligence'}
 									</span>
 									<span className="news-card-date">
 										{safeFormatDate(article.published_at || article.publishedAt)}
 									</span>
-									{article.govPulseID && (
+									{article.predovexID && (
 										<span className="news-card-id" style={{ fontSize: '10px', color: '#999', marginLeft: '8px' }}>
-											{article.govPulseID}
+											{article.predovexID}
 										</span>
 									)}
+									<button
+										className={'news-card-tldr-btn' + (tldrMap[article.url || article.title] ? ' news-card-tldr-btn--active' : '')}
+										onClick={function(e) { handleTldr(e, article); }}
+										disabled={!!tldrLoading[article.url || article.title]}
+										title="AI TLDR summary"
+									>
+										{tldrLoading[article.url || article.title] ? '…' : 'TLDR'}
+									</button>
 								</div>
 							</div>
 						</div>

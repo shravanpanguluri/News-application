@@ -95,7 +95,7 @@ const GovernmentNewsCard = ({ article, onClick }) => {
 						<div style={{ marginBottom: '12px', display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
 							<Label size="small" color="red">
 								<Icon name="shield" />
-								GOVPULSE INTELLIGENCE
+									PREDOVEX INTELLIGENCE
 							</Label>
 							<Label size="small">
 								{getCountryFlag(article.country)} {(article.country || 'Global').toUpperCase()}

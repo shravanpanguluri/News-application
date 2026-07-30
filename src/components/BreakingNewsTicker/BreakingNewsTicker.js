@@ -39,7 +39,7 @@ const BreakingNewsTicker = ({ breakingNews = [] }) => {
 							{currentArticle && currentArticle.title ? currentArticle.title : 'Loading...'}
 						</span>
 						<span className="breaking-news-source">
-							<Icon name="shield" color="red" size="small" /> GOVPULSE INTELLIGENCE
+							<Icon name="shield" color="red" size="small" /> PREDOVEX INTELLIGENCE
 						</span>
 					</div>
 					<div className="breaking-news-indicators">

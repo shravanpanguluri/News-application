@@ -40,7 +40,7 @@ from services.correlation_tracker import tracker
 
 _vader       = SentimentIntensityAnalyzer()
 _price_cache = {}
-_HEADERS     = {"User-Agent": "GovPulse-Research/1.0 shrav494@gmail.com"}
+_HEADERS     = {"User-Agent": "Predovex-Research/1.0"}
 
 # ── Ticker → company name map (all tickers in dataset) ───────────────────────
 TICKER_MAP = {
@@ -360,7 +360,7 @@ _DOJ_KEYWORDS = [
 def _scrape_doj_page(url):
     """Scrape a single DOJ press release page for title, date, body."""
     try:
-        r = requests.get(url, headers={**_HEADERS, "User-Agent": "Mozilla/5.0 GovPulse shrav494@gmail.com"}, timeout=15)
+        r = requests.get(url, headers={**_HEADERS, "User-Agent": "Mozilla/5.0 Predovex"}, timeout=15)
         if r.status_code != 200:
             return []
         soup = BeautifulSoup(r.text, "html.parser")
@@ -381,7 +381,7 @@ def _scrape_doj_page(url):
 def _fetch_doj_release_date(url):
     """Fetch a single DOJ press release page to extract the date."""
     try:
-        r = requests.get(url, headers={**_HEADERS, "User-Agent": "Mozilla/5.0 GovPulse shrav494@gmail.com"}, timeout=15)
+        r = requests.get(url, headers={**_HEADERS, "User-Agent": "Mozilla/5.0 Predovex"}, timeout=15)
         if r.status_code != 200:
             return None
         soup = BeautifulSoup(r.text, "html.parser")
