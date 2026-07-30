@@ -226,9 +226,9 @@ async def startup_event():
     try:
         db = SessionLocal()
         test_users = [
-			{"email": "admin@predovex.com", "password": "password123", "tier": "enterprise"},
-			{"email": "user@predovex.com", "password": "password123", "tier": "pro"},
-			{"email": "free@predovex.com", "password": "password123", "tier": "free"}
+            {"email": "admin@predovex.com", "password": "password123", "tier": "enterprise"},
+            {"email": "user@predovex.com", "password": "password123", "tier": "pro"},
+            {"email": "free@predovex.com", "password": "password123", "tier": "free"}
         ]
         for u in test_users:
             existing = db.query(db_models.User).filter(db_models.User.email == u["email"]).first()
@@ -245,7 +245,7 @@ async def startup_event():
     except Exception as e:
         print(f"Startup warning: {e}")
     
-	print("✅ Predovex Backend Started Successfully!")
+    print("✅ Predovex Backend Started Successfully!")
     print("📡 API Docs: http://localhost:8000/docs")
     print("🏥 Health: http://localhost:8000/health")
 
