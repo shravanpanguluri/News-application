@@ -6,6 +6,7 @@ import { BACKEND_URL } from '../API/governmentApi';
 import './TradingIntelligenceDashboard.css';
 
 const TICKERS = ['AAPL', 'MSFT', 'TSLA', 'NVDA', 'JPM', 'LMT', 'BA', 'XOM'];
+const HOSTED_BACKEND_URL = 'https://govpulse-application.onrender.com';
 
 function SignalTimeline() {
   const [ticker, setTicker] = useState('AAPL');
@@ -67,11 +68,20 @@ function InsiderTradingFeed() {
     setSearchedTicker(symbol);
     setMessage('');
     try {
-      const response = await fetch(`${BACKEND_URL}/api/sec/insider/${encodeURIComponent(symbol)}?limit=25&days=180`);
+      const endpoint = `/api/sec/insider/${encodeURIComponent(symbol)}?limit=25&days=180`;
+      let response = await fetch(`${BACKEND_URL}${endpoint}`);
       if (!response.ok) {
         throw new Error(`SEC request failed with status ${response.status}`);
       }
-      const data = await response.json();
+      let data = await response.json();
+
+      if ((!data.filings || data.filings.length === 0) && BACKEND_URL !== HOSTED_BACKEND_URL) {
+        response = await fetch(`${HOSTED_BACKEND_URL}${endpoint}`);
+        if (response.ok) {
+          data = await response.json();
+        }
+      }
+
       const nextFilings = Array.isArray(data.filings) ? data.filings : [];
       setFilings(nextFilings);
       setMessage(nextFilings.length
