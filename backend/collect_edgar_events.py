@@ -17,8 +17,7 @@ import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import yfinance as yf
-
+import requests
 sys.path.insert(0, str(Path(__file__).parent))
 from services.correlation_tracker import tracker
 from services.sec_edgar_service import sec_edgar_service
@@ -44,6 +43,7 @@ TICKERS = [
 
 _price_cache = {}
 _vader = SentimentIntensityAnalyzer()
+_YAHOO_HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 
 def _safe(v):
@@ -60,20 +60,39 @@ def _get_price(ticker_sym, target_date, window=5):
     key = f"{ticker_sym}_{target_date.strftime('%Y-%m-%d')}"
     if key in _price_cache:
         return _price_cache[key]
-    start = (target_date - timedelta(days=window + 3)).strftime("%Y-%m-%d")
-    end   = (target_date + timedelta(days=window + 3)).strftime("%Y-%m-%d")
+    price = _get_price_yahoo_chart(ticker_sym, target_date, window)
+    _price_cache[key] = price
+    return price
+
+
+def _get_price_yahoo_chart(ticker_sym, target_date, window=5):
+    start_dt = target_date - timedelta(days=window + 3)
+    end_dt = target_date + timedelta(days=window + 3)
+    url = (
+        f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_sym}"
+        f"?period1={int(start_dt.timestamp())}"
+        f"&period2={int(end_dt.timestamp())}"
+        f"&interval=1d&events=history"
+    )
     try:
-        hist = yf.Ticker(ticker_sym).history(start=start, end=end)
-        if hist.empty:
-            _price_cache[key] = None
+        response = requests.get(url, headers=_YAHOO_HEADERS, timeout=15)
+        response.raise_for_status()
+        result = (response.json().get("chart", {}).get("result") or [None])[0]
+        if not result:
             return None
-        hist.index = hist.index.tz_localize(None) if hist.index.tz else hist.index
-        closest = min(hist.index, key=lambda d: abs((d.to_pydatetime() - target_date).days))
-        price = _safe(float(hist.loc[closest, "Close"]))
-        _price_cache[key] = price
-        return price
+        timestamps = result.get("timestamp") or []
+        quote = ((result.get("indicators") or {}).get("quote") or [{}])[0]
+        closes = quote.get("close") or []
+        rows = []
+        for ts, close in zip(timestamps, closes):
+            if close is None:
+                continue
+            rows.append((datetime.fromtimestamp(ts), float(close)))
+        if not rows:
+            return None
+        closest = min(rows, key=lambda item: abs((item[0] - target_date).days))
+        return _safe(closest[1])
     except Exception:
-        _price_cache[key] = None
         return None
 
 
@@ -141,10 +160,11 @@ def _backfill(event_id, ticker, event_date, title):
             "vader_neutral":       round(vs["neu"], 4),
         }
 
-        break
+        updated = ev.get("return_7d") is not None
+        tracker._save_data()
+        return updated
 
-    tracker._save_data()
-    return True
+    return False
 
 
 def collect_8k(ticker, limit=20):
@@ -172,6 +192,9 @@ def collect_8k(ticker, limit=20):
             for d in range(-1, 2)
         }
         if nearby & existing:
+            continue
+
+        if _get_price(ticker, event_date) is None:
             continue
 
         form_type   = filing.get("form_type", "8-K")

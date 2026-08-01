@@ -1,601 +1,921 @@
 {
   "1d": [
     {
+      "feature": "days_to_week_end",
+      "importance": 0.2343
+    },
+    {
       "feature": "day_of_week",
-      "importance": 0.1383
+      "importance": 0.1913
     },
     {
-      "feature": "consecutive_positive_returns",
-      "importance": 0.1237
+      "feature": "source_credibility",
+      "importance": 0.0887
     },
     {
-      "feature": "event_type_gdelt",
-      "importance": 0.0989
-    },
-    {
-      "feature": "event_type_foia",
-      "importance": 0.0495
-    },
-    {
-      "feature": "event_type_contract",
-      "importance": 0.0396
-    },
-    {
-      "feature": "events_last_7d",
-      "importance": 0.0316
+      "feature": "event_type_earnings",
+      "importance": 0.0504
     },
     {
       "feature": "days_since_last_event",
-      "importance": 0.0279
-    },
-    {
-      "feature": "foia_count_90d",
-      "importance": 0.0275
-    },
-    {
-      "feature": "signal_score",
-      "importance": 0.0245
-    },
-    {
-      "feature": "is_month_end",
-      "importance": 0.0214
-    },
-    {
-      "feature": "foia_before_contract_90d",
-      "importance": 0.021
-    },
-    {
-      "feature": "title_length_norm",
-      "importance": 0.0208
-    },
-    {
-      "feature": "market_momentum_3d",
-      "importance": 0.0203
-    },
-    {
-      "feature": "vix_level",
-      "importance": 0.0195
-    },
-    {
-      "feature": "vader_positive",
-      "importance": 0.0193
-    },
-    {
-      "feature": "event_count_30d",
-      "importance": 0.0192
-    },
-    {
-      "feature": "ticker_event_frequency",
-      "importance": 0.0186
-    },
-    {
-      "feature": "avg_signal_score_30d",
-      "importance": 0.0183
-    },
-    {
-      "feature": "event_type_sec_filing",
-      "importance": 0.0183
-    },
-    {
-      "feature": "month",
-      "importance": 0.0182
-    },
-    {
-      "feature": "relative_momentum",
-      "importance": 0.018
-    },
-    {
-      "feature": "total_gov_spending_30d",
-      "importance": 0.0179
-    },
-    {
-      "feature": "stock_volatility_30d",
-      "importance": 0.0178
-    },
-    {
-      "feature": "contract_amount_zscore",
-      "importance": 0.0176
-    },
-    {
-      "feature": "contract_amount_normalized",
-      "importance": 0.0171
-    },
-    {
-      "feature": "event_count_60d",
-      "importance": 0.0165
-    },
-    {
-      "feature": "event_count_90d",
-      "importance": 0.0163
-    },
-    {
-      "feature": "total_gov_spending_60d",
-      "importance": 0.0163
+      "importance": 0.0458
     },
     {
       "feature": "company_gov_sensitivity",
-      "importance": 0.0161
+      "importance": 0.0379
     },
     {
-      "feature": "quarter",
-      "importance": 0.016
+      "feature": "consecutive_positive_returns",
+      "importance": 0.0346
+    },
+    {
+      "feature": "is_month_end",
+      "importance": 0.0241
+    },
+    {
+      "feature": "avg_return_5d",
+      "importance": 0.024
+    },
+    {
+      "feature": "events_last_7d",
+      "importance": 0.0213
+    },
+    {
+      "feature": "momentum_strength",
+      "importance": 0.0182
+    },
+    {
+      "feature": "event_type_sec_filing",
+      "importance": 0.0147
+    },
+    {
+      "feature": "month",
+      "importance": 0.0123
+    },
+    {
+      "feature": "momentum_agreement",
+      "importance": 0.0115
+    },
+    {
+      "feature": "return_3d_lag1",
+      "importance": 0.0107
+    },
+    {
+      "feature": "market_momentum_3d",
+      "importance": 0.0092
+    },
+    {
+      "feature": "vix_level",
+      "importance": 0.009
+    },
+    {
+      "feature": "signal_vix_interaction",
+      "importance": 0.0084
+    },
+    {
+      "feature": "event_type_insider",
+      "importance": 0.0082
     },
     {
       "feature": "stock_momentum_3d",
-      "importance": 0.0152
+      "importance": 0.0074
     },
     {
-      "feature": "high_vix",
-      "importance": 0.0151
-    },
-    {
-      "feature": "avg_signal_score_60d",
-      "importance": 0.0142
-    },
-    {
-      "feature": "vader_negative",
-      "importance": 0.0095
+      "feature": "event_type_macro",
+      "importance": 0.0074
     },
     {
       "feature": "event_type_regulatory",
-      "importance": 0.0
+      "importance": 0.0071
+    },
+    {
+      "feature": "event_type_enforcement",
+      "importance": 0.007
+    },
+    {
+      "feature": "event_type_contract",
+      "importance": 0.0063
+    },
+    {
+      "feature": "event_type_foia",
+      "importance": 0.0057
+    },
+    {
+      "feature": "ticker_event_frequency",
+      "importance": 0.0056
+    },
+    {
+      "feature": "title_length_norm",
+      "importance": 0.0056
+    },
+    {
+      "feature": "high_vix",
+      "importance": 0.0055
+    },
+    {
+      "feature": "stock_volatility_30d",
+      "importance": 0.0054
+    },
+    {
+      "feature": "event_type_gdelt",
+      "importance": 0.0053
+    },
+    {
+      "feature": "event_count_60d",
+      "importance": 0.005
+    },
+    {
+      "feature": "event_count_30d",
+      "importance": 0.0048
+    },
+    {
+      "feature": "vol_ratio_3d",
+      "importance": 0.0047
+    },
+    {
+      "feature": "relative_momentum",
+      "importance": 0.0042
     },
     {
       "feature": "event_type_fda_action",
+      "importance": 0.0041
+    },
+    {
+      "feature": "total_gov_spending_30d",
+      "importance": 0.0041
+    },
+    {
+      "feature": "earnings_surprise",
+      "importance": 0.004
+    },
+    {
+      "feature": "avg_signal_score_60d",
+      "importance": 0.0039
+    },
+    {
+      "feature": "event_cluster_3d",
+      "importance": 0.0038
+    },
+    {
+      "feature": "avg_signal_score_30d",
+      "importance": 0.0037
+    },
+    {
+      "feature": "signal_score",
+      "importance": 0.0037
+    },
+    {
+      "feature": "foia_count_90d",
+      "importance": 0.0036
+    },
+    {
+      "feature": "event_count_90d",
+      "importance": 0.0036
+    },
+    {
+      "feature": "pe_ratio",
+      "importance": 0.0036
+    },
+    {
+      "feature": "vader_negative",
+      "importance": 0.0034
+    },
+    {
+      "feature": "event_type_geopolitical",
+      "importance": 0.0033
+    },
+    {
+      "feature": "contract_amount_zscore",
+      "importance": 0.003
+    },
+    {
+      "feature": "total_gov_spending_60d",
+      "importance": 0.0028
+    },
+    {
+      "feature": "event_type_policy",
+      "importance": 0.0027
+    },
+    {
+      "feature": "contract_amount_normalized",
+      "importance": 0.0024
+    },
+    {
+      "feature": "vader_positive",
+      "importance": 0.0024
+    },
+    {
+      "feature": "contract_bullish_ix",
+      "importance": 0.0005
+    },
+    {
+      "feature": "foia_before_contract_90d",
+      "importance": 0.0
+    },
+    {
+      "feature": "quarter",
       "importance": 0.0
     },
     {
       "feature": "market_regime",
+      "importance": 0.0
+    },
+    {
+      "feature": "revenue_growth_yoy",
+      "importance": 0.0
+    },
+    {
+      "feature": "event_type_legal",
       "importance": 0.0
     }
   ],
   "3d": [
     {
-      "feature": "event_type_gdelt",
-      "importance": 0.0375
-    },
-    {
-      "feature": "events_last_7d",
-      "importance": 0.0339
-    },
-    {
-      "feature": "event_type_contract",
-      "importance": 0.0339
-    },
-    {
-      "feature": "vader_negative",
-      "importance": 0.0338
-    },
-    {
-      "feature": "avg_signal_score_30d",
-      "importance": 0.0329
-    },
-    {
-      "feature": "consecutive_positive_returns",
-      "importance": 0.0316
-    },
-    {
-      "feature": "event_count_30d",
-      "importance": 0.0311
-    },
-    {
-      "feature": "market_momentum_3d",
-      "importance": 0.0308
-    },
-    {
-      "feature": "event_type_sec_filing",
-      "importance": 0.0308
-    },
-    {
-      "feature": "vix_level",
-      "importance": 0.0305
-    },
-    {
-      "feature": "foia_count_90d",
-      "importance": 0.0305
-    },
-    {
-      "feature": "is_month_end",
-      "importance": 0.0305
-    },
-    {
-      "feature": "foia_before_contract_90d",
-      "importance": 0.0304
-    },
-    {
-      "feature": "avg_signal_score_60d",
-      "importance": 0.0299
-    },
-    {
-      "feature": "stock_momentum_3d",
-      "importance": 0.0295
-    },
-    {
-      "feature": "relative_momentum",
-      "importance": 0.0294
-    },
-    {
-      "feature": "event_type_foia",
-      "importance": 0.0288
-    },
-    {
-      "feature": "high_vix",
-      "importance": 0.0285
-    },
-    {
       "feature": "company_gov_sensitivity",
-      "importance": 0.0285
-    },
-    {
-      "feature": "quarter",
-      "importance": 0.0282
-    },
-    {
-      "feature": "month",
-      "importance": 0.0281
-    },
-    {
-      "feature": "ticker_event_frequency",
-      "importance": 0.0281
-    },
-    {
-      "feature": "stock_volatility_30d",
-      "importance": 0.0279
-    },
-    {
-      "feature": "contract_amount_normalized",
-      "importance": 0.0278
-    },
-    {
-      "feature": "event_count_60d",
-      "importance": 0.0278
-    },
-    {
-      "feature": "vader_positive",
-      "importance": 0.0276
+      "importance": 0.1271
     },
     {
       "feature": "days_since_last_event",
-      "importance": 0.0275
+      "importance": 0.0781
     },
     {
-      "feature": "contract_amount_zscore",
-      "importance": 0.0272
+      "feature": "event_type_sec_filing",
+      "importance": 0.0457
     },
     {
-      "feature": "total_gov_spending_30d",
-      "importance": 0.0271
+      "feature": "days_to_week_end",
+      "importance": 0.0448
+    },
+    {
+      "feature": "return_3d_lag1",
+      "importance": 0.0447
+    },
+    {
+      "feature": "event_type_enforcement",
+      "importance": 0.0442
+    },
+    {
+      "feature": "event_type_macro",
+      "importance": 0.0306
+    },
+    {
+      "feature": "event_type_earnings",
+      "importance": 0.0304
+    },
+    {
+      "feature": "source_credibility",
+      "importance": 0.0256
     },
     {
       "feature": "day_of_week",
-      "importance": 0.0267
+      "importance": 0.0239
     },
     {
-      "feature": "total_gov_spending_60d",
-      "importance": 0.0264
+      "feature": "momentum_strength",
+      "importance": 0.0218
+    },
+    {
+      "feature": "vix_level",
+      "importance": 0.021
+    },
+    {
+      "feature": "signal_vix_interaction",
+      "importance": 0.0203
     },
     {
       "feature": "title_length_norm",
-      "importance": 0.0262
+      "importance": 0.019
     },
     {
-      "feature": "event_count_90d",
-      "importance": 0.0258
+      "feature": "market_momentum_3d",
+      "importance": 0.0186
     },
     {
-      "feature": "signal_score",
-      "importance": 0.0251
+      "feature": "consecutive_positive_returns",
+      "importance": 0.0181
+    },
+    {
+      "feature": "is_month_end",
+      "importance": 0.0177
+    },
+    {
+      "feature": "month",
+      "importance": 0.0177
+    },
+    {
+      "feature": "event_type_insider",
+      "importance": 0.0171
+    },
+    {
+      "feature": "events_last_7d",
+      "importance": 0.0162
     },
     {
       "feature": "event_type_regulatory",
-      "importance": 0.0
+      "importance": 0.0155
+    },
+    {
+      "feature": "stock_momentum_3d",
+      "importance": 0.0155
+    },
+    {
+      "feature": "avg_return_5d",
+      "importance": 0.0143
+    },
+    {
+      "feature": "signal_score",
+      "importance": 0.0137
+    },
+    {
+      "feature": "high_vix",
+      "importance": 0.0137
+    },
+    {
+      "feature": "momentum_agreement",
+      "importance": 0.0129
+    },
+    {
+      "feature": "event_count_30d",
+      "importance": 0.0127
+    },
+    {
+      "feature": "ticker_event_frequency",
+      "importance": 0.0123
+    },
+    {
+      "feature": "relative_momentum",
+      "importance": 0.0122
+    },
+    {
+      "feature": "avg_signal_score_60d",
+      "importance": 0.0118
+    },
+    {
+      "feature": "vader_positive",
+      "importance": 0.0116
+    },
+    {
+      "feature": "earnings_surprise",
+      "importance": 0.0116
+    },
+    {
+      "feature": "total_gov_spending_30d",
+      "importance": 0.0115
+    },
+    {
+      "feature": "event_type_contract",
+      "importance": 0.0114
+    },
+    {
+      "feature": "pe_ratio",
+      "importance": 0.0112
+    },
+    {
+      "feature": "event_type_geopolitical",
+      "importance": 0.0112
+    },
+    {
+      "feature": "event_count_60d",
+      "importance": 0.0108
+    },
+    {
+      "feature": "event_count_90d",
+      "importance": 0.0108
+    },
+    {
+      "feature": "stock_volatility_30d",
+      "importance": 0.0108
+    },
+    {
+      "feature": "contract_amount_zscore",
+      "importance": 0.0104
+    },
+    {
+      "feature": "total_gov_spending_60d",
+      "importance": 0.0103
+    },
+    {
+      "feature": "vader_negative",
+      "importance": 0.0102
+    },
+    {
+      "feature": "contract_amount_normalized",
+      "importance": 0.01
+    },
+    {
+      "feature": "vol_ratio_3d",
+      "importance": 0.0096
+    },
+    {
+      "feature": "event_cluster_3d",
+      "importance": 0.0089
+    },
+    {
+      "feature": "avg_signal_score_30d",
+      "importance": 0.0087
+    },
+    {
+      "feature": "contract_bullish_ix",
+      "importance": 0.0075
     },
     {
       "feature": "event_type_fda_action",
+      "importance": 0.0065
+    },
+    {
+      "feature": "event_type_foia",
+      "importance": 0.0
+    },
+    {
+      "feature": "event_type_gdelt",
+      "importance": 0.0
+    },
+    {
+      "feature": "foia_before_contract_90d",
+      "importance": 0.0
+    },
+    {
+      "feature": "quarter",
       "importance": 0.0
     },
     {
       "feature": "market_regime",
+      "importance": 0.0
+    },
+    {
+      "feature": "foia_count_90d",
+      "importance": 0.0
+    },
+    {
+      "feature": "revenue_growth_yoy",
+      "importance": 0.0
+    },
+    {
+      "feature": "event_type_legal",
+      "importance": 0.0
+    },
+    {
+      "feature": "event_type_policy",
       "importance": 0.0
     }
   ],
   "7d": [
     {
-      "feature": "event_type_foia",
-      "importance": 0.0474
-    },
-    {
-      "feature": "consecutive_positive_returns",
-      "importance": 0.0378
-    },
-    {
-      "feature": "title_length_norm",
-      "importance": 0.0372
-    },
-    {
-      "feature": "foia_before_contract_90d",
-      "importance": 0.0363
-    },
-    {
-      "feature": "high_vix",
-      "importance": 0.0346
-    },
-    {
-      "feature": "ticker_event_frequency",
-      "importance": 0.0333
-    },
-    {
-      "feature": "foia_count_90d",
-      "importance": 0.0325
-    },
-    {
-      "feature": "avg_signal_score_60d",
-      "importance": 0.0323
-    },
-    {
-      "feature": "stock_momentum_3d",
-      "importance": 0.0322
-    },
-    {
-      "feature": "avg_signal_score_30d",
-      "importance": 0.032
-    },
-    {
-      "feature": "vix_level",
-      "importance": 0.0311
-    },
-    {
-      "feature": "signal_score",
-      "importance": 0.0308
-    },
-    {
-      "feature": "is_month_end",
-      "importance": 0.0306
-    },
-    {
-      "feature": "quarter",
-      "importance": 0.0304
-    },
-    {
-      "feature": "vader_positive",
-      "importance": 0.0303
-    },
-    {
-      "feature": "vader_negative",
-      "importance": 0.0302
-    },
-    {
-      "feature": "stock_volatility_30d",
-      "importance": 0.0295
-    },
-    {
-      "feature": "total_gov_spending_30d",
-      "importance": 0.0294
-    },
-    {
-      "feature": "market_momentum_3d",
-      "importance": 0.0293
-    },
-    {
-      "feature": "day_of_week",
-      "importance": 0.0292
-    },
-    {
-      "feature": "month",
-      "importance": 0.0292
-    },
-    {
-      "feature": "relative_momentum",
-      "importance": 0.029
-    },
-    {
-      "feature": "contract_amount_normalized",
-      "importance": 0.0287
-    },
-    {
-      "feature": "events_last_7d",
-      "importance": 0.0279
-    },
-    {
-      "feature": "total_gov_spending_60d",
-      "importance": 0.0279
+      "feature": "company_gov_sensitivity",
+      "importance": 0.141
     },
     {
       "feature": "days_since_last_event",
-      "importance": 0.0275
+      "importance": 0.0527
     },
     {
-      "feature": "company_gov_sensitivity",
-      "importance": 0.0272
+      "feature": "return_3d_lag1",
+      "importance": 0.0356
     },
     {
-      "feature": "contract_amount_zscore",
-      "importance": 0.0271
+      "feature": "event_type_earnings",
+      "importance": 0.0297
     },
     {
-      "feature": "event_count_90d",
-      "importance": 0.0265
+      "feature": "vix_level",
+      "importance": 0.0264
     },
     {
-      "feature": "event_count_30d",
-      "importance": 0.026
+      "feature": "month",
+      "importance": 0.0248
     },
     {
-      "feature": "event_count_60d",
-      "importance": 0.0252
+      "feature": "signal_vix_interaction",
+      "importance": 0.0242
     },
     {
-      "feature": "event_type_contract",
-      "importance": 0.0236
+      "feature": "is_month_end",
+      "importance": 0.0239
     },
     {
-      "feature": "event_type_sec_filing",
-      "importance": 0.0179
+      "feature": "contract_amount_normalized",
+      "importance": 0.0231
+    },
+    {
+      "feature": "title_length_norm",
+      "importance": 0.0226
+    },
+    {
+      "feature": "consecutive_positive_returns",
+      "importance": 0.0224
+    },
+    {
+      "feature": "events_last_7d",
+      "importance": 0.0221
+    },
+    {
+      "feature": "source_credibility",
+      "importance": 0.0214
+    },
+    {
+      "feature": "foia_count_90d",
+      "importance": 0.0212
+    },
+    {
+      "feature": "event_cluster_3d",
+      "importance": 0.0192
+    },
+    {
+      "feature": "foia_before_contract_90d",
+      "importance": 0.0192
+    },
+    {
+      "feature": "market_momentum_3d",
+      "importance": 0.0189
+    },
+    {
+      "feature": "stock_volatility_30d",
+      "importance": 0.0174
+    },
+    {
+      "feature": "pe_ratio",
+      "importance": 0.0174
     },
     {
       "feature": "event_type_regulatory",
-      "importance": 0.0
+      "importance": 0.0173
+    },
+    {
+      "feature": "days_to_week_end",
+      "importance": 0.0169
+    },
+    {
+      "feature": "vader_negative",
+      "importance": 0.0167
+    },
+    {
+      "feature": "momentum_strength",
+      "importance": 0.0164
+    },
+    {
+      "feature": "earnings_surprise",
+      "importance": 0.0161
+    },
+    {
+      "feature": "vol_ratio_3d",
+      "importance": 0.0159
+    },
+    {
+      "feature": "event_count_30d",
+      "importance": 0.0157
+    },
+    {
+      "feature": "contract_amount_zscore",
+      "importance": 0.0156
+    },
+    {
+      "feature": "avg_return_5d",
+      "importance": 0.0156
+    },
+    {
+      "feature": "total_gov_spending_60d",
+      "importance": 0.0145
+    },
+    {
+      "feature": "total_gov_spending_30d",
+      "importance": 0.0143
+    },
+    {
+      "feature": "event_type_foia",
+      "importance": 0.0142
+    },
+    {
+      "feature": "day_of_week",
+      "importance": 0.0142
+    },
+    {
+      "feature": "event_type_macro",
+      "importance": 0.0139
+    },
+    {
+      "feature": "relative_momentum",
+      "importance": 0.0135
+    },
+    {
+      "feature": "avg_signal_score_30d",
+      "importance": 0.0134
+    },
+    {
+      "feature": "avg_signal_score_60d",
+      "importance": 0.0129
+    },
+    {
+      "feature": "contract_bullish_ix",
+      "importance": 0.0128
+    },
+    {
+      "feature": "signal_score",
+      "importance": 0.0128
+    },
+    {
+      "feature": "event_type_gdelt",
+      "importance": 0.0127
+    },
+    {
+      "feature": "event_type_sec_filing",
+      "importance": 0.0127
+    },
+    {
+      "feature": "ticker_event_frequency",
+      "importance": 0.0124
+    },
+    {
+      "feature": "event_type_insider",
+      "importance": 0.0123
+    },
+    {
+      "feature": "stock_momentum_3d",
+      "importance": 0.0122
+    },
+    {
+      "feature": "event_count_60d",
+      "importance": 0.0119
+    },
+    {
+      "feature": "event_type_contract",
+      "importance": 0.0117
+    },
+    {
+      "feature": "event_count_90d",
+      "importance": 0.0116
+    },
+    {
+      "feature": "vader_positive",
+      "importance": 0.0108
+    },
+    {
+      "feature": "momentum_agreement",
+      "importance": 0.0092
+    },
+    {
+      "feature": "event_type_enforcement",
+      "importance": 0.0088
+    },
+    {
+      "feature": "event_type_geopolitical",
+      "importance": 0.0078
     },
     {
       "feature": "event_type_fda_action",
       "importance": 0.0
     },
     {
-      "feature": "event_type_gdelt",
+      "feature": "quarter",
       "importance": 0.0
     },
     {
       "feature": "market_regime",
+      "importance": 0.0
+    },
+    {
+      "feature": "high_vix",
+      "importance": 0.0
+    },
+    {
+      "feature": "revenue_growth_yoy",
+      "importance": 0.0
+    },
+    {
+      "feature": "event_type_legal",
+      "importance": 0.0
+    },
+    {
+      "feature": "event_type_policy",
       "importance": 0.0
     }
   ],
   "30d": [
     {
-      "feature": "foia_count_90d",
-      "importance": 0.0414
-    },
-    {
-      "feature": "high_vix",
-      "importance": 0.0359
-    },
-    {
-      "feature": "vader_positive",
-      "importance": 0.035
-    },
-    {
-      "feature": "vix_level",
-      "importance": 0.034
-    },
-    {
-      "feature": "title_length_norm",
-      "importance": 0.0326
-    },
-    {
-      "feature": "ticker_event_frequency",
-      "importance": 0.0325
-    },
-    {
-      "feature": "quarter",
-      "importance": 0.0323
-    },
-    {
-      "feature": "stock_volatility_30d",
-      "importance": 0.0323
-    },
-    {
-      "feature": "total_gov_spending_60d",
-      "importance": 0.0319
-    },
-    {
-      "feature": "avg_signal_score_60d",
-      "importance": 0.0314
-    },
-    {
-      "feature": "stock_momentum_3d",
-      "importance": 0.0313
-    },
-    {
-      "feature": "events_last_7d",
-      "importance": 0.0308
-    },
-    {
-      "feature": "signal_score",
-      "importance": 0.0308
+      "feature": "company_gov_sensitivity",
+      "importance": 0.1324
     },
     {
       "feature": "month",
+      "importance": 0.0391
+    },
+    {
+      "feature": "vix_level",
+      "importance": 0.0337
+    },
+    {
+      "feature": "event_type_earnings",
+      "importance": 0.0324
+    },
+    {
+      "feature": "signal_vix_interaction",
       "importance": 0.0307
     },
     {
-      "feature": "market_momentum_3d",
-      "importance": 0.0305
-    },
-    {
-      "feature": "company_gov_sensitivity",
-      "importance": 0.0304
-    },
-    {
-      "feature": "total_gov_spending_30d",
-      "importance": 0.0303
-    },
-    {
-      "feature": "event_count_90d",
-      "importance": 0.0302
-    },
-    {
-      "feature": "contract_amount_normalized",
-      "importance": 0.0297
-    },
-    {
-      "feature": "event_count_60d",
-      "importance": 0.0295
-    },
-    {
-      "feature": "relative_momentum",
-      "importance": 0.0294
-    },
-    {
-      "feature": "avg_signal_score_30d",
-      "importance": 0.0292
-    },
-    {
-      "feature": "consecutive_positive_returns",
-      "importance": 0.0289
-    },
-    {
-      "feature": "contract_amount_zscore",
-      "importance": 0.0289
-    },
-    {
-      "feature": "event_type_contract",
-      "importance": 0.0287
-    },
-    {
-      "feature": "event_count_30d",
-      "importance": 0.0284
+      "feature": "foia_count_90d",
+      "importance": 0.0283
     },
     {
       "feature": "days_since_last_event",
-      "importance": 0.028
+      "importance": 0.025
     },
     {
-      "feature": "day_of_week",
-      "importance": 0.0275
+      "feature": "pe_ratio",
+      "importance": 0.0219
     },
     {
-      "feature": "is_month_end",
-      "importance": 0.0275
+      "feature": "event_count_30d",
+      "importance": 0.0215
     },
     {
-      "feature": "event_type_foia",
-      "importance": 0.0275
+      "feature": "source_credibility",
+      "importance": 0.0214
     },
     {
-      "feature": "vader_negative",
-      "importance": 0.0257
+      "feature": "earnings_surprise",
+      "importance": 0.0193
     },
     {
-      "feature": "event_type_sec_filing",
-      "importance": 0.0257
+      "feature": "consecutive_positive_returns",
+      "importance": 0.0193
     },
     {
-      "feature": "foia_before_contract_90d",
-      "importance": 0.0216
+      "feature": "signal_score",
+      "importance": 0.0191
+    },
+    {
+      "feature": "event_type_macro",
+      "importance": 0.0182
+    },
+    {
+      "feature": "contract_amount_zscore",
+      "importance": 0.0182
     },
     {
       "feature": "event_type_regulatory",
-      "importance": 0.0
+      "importance": 0.0182
+    },
+    {
+      "feature": "return_3d_lag1",
+      "importance": 0.0177
+    },
+    {
+      "feature": "market_momentum_3d",
+      "importance": 0.0176
+    },
+    {
+      "feature": "high_vix",
+      "importance": 0.0175
+    },
+    {
+      "feature": "title_length_norm",
+      "importance": 0.0174
+    },
+    {
+      "feature": "event_type_foia",
+      "importance": 0.0172
+    },
+    {
+      "feature": "avg_return_5d",
+      "importance": 0.0172
+    },
+    {
+      "feature": "event_count_90d",
+      "importance": 0.0171
+    },
+    {
+      "feature": "event_count_60d",
+      "importance": 0.0167
+    },
+    {
+      "feature": "event_type_contract",
+      "importance": 0.0167
+    },
+    {
+      "feature": "event_type_insider",
+      "importance": 0.0164
+    },
+    {
+      "feature": "stock_volatility_30d",
+      "importance": 0.016
+    },
+    {
+      "feature": "total_gov_spending_60d",
+      "importance": 0.0153
+    },
+    {
+      "feature": "avg_signal_score_60d",
+      "importance": 0.0153
+    },
+    {
+      "feature": "ticker_event_frequency",
+      "importance": 0.0153
+    },
+    {
+      "feature": "events_last_7d",
+      "importance": 0.0151
+    },
+    {
+      "feature": "contract_amount_normalized",
+      "importance": 0.0147
+    },
+    {
+      "feature": "event_cluster_3d",
+      "importance": 0.0145
+    },
+    {
+      "feature": "vol_ratio_3d",
+      "importance": 0.0144
+    },
+    {
+      "feature": "vader_positive",
+      "importance": 0.0144
+    },
+    {
+      "feature": "avg_signal_score_30d",
+      "importance": 0.0143
+    },
+    {
+      "feature": "total_gov_spending_30d",
+      "importance": 0.0143
+    },
+    {
+      "feature": "event_type_geopolitical",
+      "importance": 0.0142
+    },
+    {
+      "feature": "event_type_enforcement",
+      "importance": 0.0139
+    },
+    {
+      "feature": "day_of_week",
+      "importance": 0.0136
+    },
+    {
+      "feature": "vader_negative",
+      "importance": 0.0135
+    },
+    {
+      "feature": "contract_bullish_ix",
+      "importance": 0.0134
+    },
+    {
+      "feature": "momentum_agreement",
+      "importance": 0.0129
+    },
+    {
+      "feature": "stock_momentum_3d",
+      "importance": 0.0126
+    },
+    {
+      "feature": "relative_momentum",
+      "importance": 0.0126
+    },
+    {
+      "feature": "momentum_strength",
+      "importance": 0.0124
+    },
+    {
+      "feature": "event_type_sec_filing",
+      "importance": 0.0118
+    },
+    {
+      "feature": "is_month_end",
+      "importance": 0.0102
+    },
+    {
+      "feature": "days_to_week_end",
+      "importance": 0.0102
+    },
+    {
+      "feature": "event_type_gdelt",
+      "importance": 0.0079
+    },
+    {
+      "feature": "event_type_policy",
+      "importance": 0.007
     },
     {
       "feature": "event_type_fda_action",
       "importance": 0.0
     },
     {
-      "feature": "event_type_gdelt",
+      "feature": "foia_before_contract_90d",
+      "importance": 0.0
+    },
+    {
+      "feature": "quarter",
       "importance": 0.0
     },
     {
       "feature": "market_regime",
+      "importance": 0.0
+    },
+    {
+      "feature": "revenue_growth_yoy",
+      "importance": 0.0
+    },
+    {
+      "feature": "event_type_legal",
       "importance": 0.0
     }
   ]
