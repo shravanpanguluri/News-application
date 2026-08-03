@@ -22,12 +22,12 @@
   "earnings_surprise": 0.0,
   "event_cluster_3d": 0.0,
   "momentum_agreement": 0.0,
-  "signal_vix_interaction": 9.2072,
+  "signal_vix_interaction": 9.205,
   "avg_return_5d": 0.0,
-  "return_3d_lag1": 0.0019,
+  "return_3d_lag1": 0.0002,
   "vol_ratio_3d": 0.0,
   "contract_bullish_ix": 0.0,
-  "momentum_strength": 1.5646,
+  "momentum_strength": 1.5659,
   "days_to_week_end": 2.0,
   "source_credibility": 0.96
 }
