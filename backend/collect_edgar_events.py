@@ -41,6 +41,11 @@ TICKERS = [
     "WMT", "XOM",
 ]
 
+# Include every ticker with a known SEC CIK mapping. The static list above is
+# the original high-signal universe; the service mapping now contains later
+# expansion tickers too. Preserve order while appending mapped tickers.
+TICKERS = list(dict.fromkeys(TICKERS + sorted(sec_edgar_service._cik_mappings)))
+
 _price_cache = {}
 _vader = SentimentIntensityAnalyzer()
 _YAHOO_HEADERS = {"User-Agent": "Mozilla/5.0"}
@@ -99,9 +104,9 @@ def _get_price_yahoo_chart(ticker_sym, target_date, window=5):
 def _existing_dates(ticker):
     """Return set of (ticker, date_str) pairs already in the dataset."""
     return {
-        e["event_date"][:10]
+        e.get("event_date", "")[:10]
         for e in tracker.data["events"]
-        if e["ticker"] == ticker
+        if e.get("ticker") == ticker and e.get("event_date")
     }
 
 
@@ -112,7 +117,7 @@ def _backfill(event_id, ticker, event_date, title):
         return False
 
     for ev in tracker.data["events"]:
-        if ev["event_id"] != event_id:
+        if ev.get("event_id") != event_id:
             continue
 
         ev["price_0d"] = p0
