@@ -12,7 +12,7 @@
   "total_gov_spending_60d": 0.0,
   "avg_signal_score_60d": 60.0,
   "event_count_90d": 5.0,
-  "ticker_event_frequency": 0.048238,
+  "ticker_event_frequency": 0.048232,
   "stock_volatility_30d": 1.5,
   "vix_level": 17.44,
   "events_last_7d": 0.0,
@@ -24,10 +24,10 @@
   "momentum_agreement": 0.0,
   "signal_vix_interaction": 9.2,
   "avg_return_5d": 0.0,
-  "return_3d_lag1": 0.004,
+  "return_3d_lag1": 0.0001,
   "vol_ratio_3d": 0.0,
   "contract_bullish_ix": 0.0,
-  "momentum_strength": 1.5659,
+  "momentum_strength": 1.5663,
   "days_to_week_end": 2.0,
   "source_credibility": 0.96
 }
